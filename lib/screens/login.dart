@@ -60,11 +60,14 @@ class _LoginState extends State<Login> {
       if (code.contains('configuration-not-found') ||
           errorStr.contains('configuration_not_found') ||
           code == 'configuration_not_found') {
-        msg = "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+        msg =
+            "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
       } else if (code == 'operation-not-allowed') {
-        msg = "Email/Password sign-in is disabled in Firebase Console > Authentication > Sign-in method.";
+        msg =
+            "Email/Password sign-in is disabled in Firebase Console > Authentication > Sign-in method.";
       } else if (code == 'user-not-found' || code == 'invalid-credential') {
-        msg = "User not found or invalid credentials. Click 'Sign Up' to create an account.";
+        msg =
+            "User not found or invalid credentials. Click 'Sign Up' to create an account.";
       } else if (code == 'wrong-password') {
         msg = "Incorrect password. Please try again.";
       } else if (code == 'invalid-email') {
@@ -78,7 +81,8 @@ class _LoginState extends State<Login> {
       showTextToast(msg);
     } catch (e) {
       if (e.toString().contains('CONFIGURATION_NOT_FOUND')) {
-        _errorMessage = "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+        _errorMessage =
+            "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
       } else {
         _errorMessage = "Error: $e";
       }
