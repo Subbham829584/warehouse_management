@@ -1,0 +1,42 @@
+name: warehouse_management
+description: A full-featured warehouse and inventory management application built with Flutter and Firebase.
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.0 <4.0.0'
+
+dependencies:
+  cached_network_image: ^3.3.1
+  cloud_firestore: ^4.17.5
+  double_back_to_close_app: ^2.1.0
+  firebase_auth: ^4.19.7
+  firebase_core: ^2.32.0
+  flutter:
+    sdk: flutter
+  flutter_svg: ^1.0.3
+  fluttertoast: ^8.2.5
+  intl: ^0.19.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lint: ^1.8.2
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Nunito
+      fonts:
+      - asset: lib/assets/fonts/Nunito/Nunito-Bold.ttf
+      - asset: lib/assets/fonts/Nunito/Nunito-Light.ttf
+      - asset: lib/assets/fonts/Nunito/Nunito-Regular.ttf
+
+    - family: Open_Sans
+      fonts:
+      - asset: lib/assets/fonts/Open_Sans/OpenSans-Bold.ttf
+      - asset: lib/assets/fonts/Open_Sans/OpenSans-Light.ttf
+      - asset: lib/assets/fonts/Open_Sans/OpenSans-Regular.ttf

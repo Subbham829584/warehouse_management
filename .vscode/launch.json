@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Warehouse Management (Chrome Web)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "chrome"
+      ]
+    },
+    {
+      "name": "Warehouse Management (Edge Web)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "edge",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "edge"
+      ]
+    }
+  ]
+}
