@@ -42,7 +42,7 @@ class ProductCard extends StatelessWidget {
             SizedBox(
               height: 87,
               width: 87,
-              child: (product!.image == null)
+              child: (product?.image == null || product!.image!.trim().isEmpty)
                   ? Center(
                       child: Icon(
                         Icons.image,

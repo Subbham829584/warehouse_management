@@ -511,35 +511,32 @@ class WarehouseService {
     String? group,
   }) {
     final cleanQuery = query.trim().toLowerCase();
+    if (cleanQuery.isEmpty) {
+      return Stream.value(<WarehouseProductItem>[]);
+    }
 
     if (isFirebaseActive) {
-      Query<Map<String, dynamic>> ref = _productsCollection;
-      if (group != null && group.isNotEmpty) {
-        ref = ref.where("group", isEqualTo: group);
-      }
-      return ref
-          .where(
-            'name',
-            isGreaterThanOrEqualTo: query,
-            isLessThan: query.isEmpty
-                ? ''
-                : query.substring(0, query.length - 1) +
-                    String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
-          )
-          .orderBy('name')
+      return FirebaseFirestore.instance
+          .collection("products")
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs
-            .map((doc) => WarehouseProductItem(
-                  id: doc.id,
-                  product: Product.fromMap(doc.data()),
-                ))
-            .toList();
+        final results = <WarehouseProductItem>[];
+        for (final doc in snapshot.docs) {
+          final p = Product.fromMap(doc.data());
+          final matchesGroup = group == null ||
+              group.isEmpty ||
+              (p.group?.toLowerCase() == group.toLowerCase());
+          final matchesName =
+              p.name?.toLowerCase().contains(cleanQuery) ?? false;
+          final matchesCompany =
+              p.company?.toLowerCase().contains(cleanQuery) ?? false;
+          if (matchesGroup && (matchesName || matchesCompany)) {
+            results.add(WarehouseProductItem(id: doc.id, product: p));
+          }
+        }
+        return results;
       });
     } else {
-      if (cleanQuery.isEmpty) {
-        return Stream.value(<WarehouseProductItem>[]);
-      }
       final results = _mockProducts.where((item) {
         final matchesGroup = group == null ||
             group.isEmpty ||

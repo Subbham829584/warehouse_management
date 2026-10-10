@@ -76,31 +76,49 @@ class Home extends StatelessWidget {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          if (_newProductGroup.text != null &&
-                              _newProductGroup.text != "") {
+                          final groupName = _newProductGroup.text.trim();
+                          if (groupName.isNotEmpty) {
                             try {
-                              final DocumentSnapshot<Map<String, dynamic>>
-                                  _doc = await _firestore
-                                      .collection("utils")
-                                      .doc("productGroups")
-                                      .get();
-                              final List<dynamic> _tempList =
-                                  _doc.data()!['list'] as List<dynamic>;
-                              if (_tempList.contains(_newProductGroup.text)) {
+                              final docRef = _firestore
+                                  .collection("utils")
+                                  .doc("productGroups");
+                              final doc = await docRef.get();
+                              List<dynamic> tempList = [];
+                              if (doc.exists &&
+                                  doc.data() != null &&
+                                  doc.data()!['list'] is List) {
+                                tempList =
+                                    List<dynamic>.from(doc.data()!['list']);
+                              }
+                              if (tempList.contains(groupName)) {
                                 showTextToast("Group Name already created");
                               } else {
-                                _tempList.add(_newProductGroup.text);
-                                _firestore
-                                    .collection('utils')
-                                    .doc("productGroups")
-                                    .update({'list': _tempList});
+                                tempList.add(groupName);
+                                await docRef.set(
+                                  {'list': tempList},
+                                  SetOptions(merge: true),
+                                );
+
+                                // Also sync to warehouse collection for consistency
+                                try {
+                                  await _firestore
+                                      .collection("warehouse")
+                                      .doc("Aa3SUKLQScIhcYYkBB1K")
+                                      .collection("product_groups")
+                                      .add({
+                                    'name': groupName,
+                                    'createdAt': FieldValue.serverTimestamp(),
+                                  });
+                                } catch (_) {}
+
                                 showTextToast("Added Successfully");
                               }
                             } catch (e) {
-                              showTextToast("An Error Occured!");
+                              showTextToast("Error: $e");
                             }
-                            // ignore: use_build_context_synchronously
-                            Navigator.of(context).pop();
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
                             _newProductGroup.text = "";
                           } else {
                             showTextToast("Enter Valid Name!");
@@ -250,7 +268,8 @@ class Home extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             Expanded(
-                              child: StreamBuilder(
+                              child: StreamBuilder<
+                                  QuerySnapshot<Map<String, dynamic>>>(
                                 stream:
                                     _firestore.collection("utils").snapshots(),
                                 builder: (
@@ -259,24 +278,117 @@ class Home extends StatelessWidget {
                                           QuerySnapshot<Map<String, dynamic>>>
                                       snapshot,
                                 ) {
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.warning_amber_rounded,
+                                              size: 44,
+                                              color: ColorPalette.mandy,
+                                            ),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                              "Database Access Notice",
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: ColorPalette.timberGreen,
+                                                fontFamily: "Nunito",
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              "If using a new Firebase project, ensure Cloud Firestore Rules allow read/write.\n${snapshot.error}",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: ColorPalette.timberGreen
+                                                    .withOpacity(0.7),
+                                                fontFamily: "Nunito",
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+
                                   if (snapshot.hasData) {
-                                    final List<dynamic> _productGroups =
-                                        snapshot.data!.docs[0].data()['list']
-                                            as List<dynamic>;
-                                    _productGroups.sort();
+                                    List<dynamic> productGroups = [];
+                                    for (final doc in snapshot.data!.docs) {
+                                      if (doc.id == "productGroups" &&
+                                          doc.data().containsKey('list')) {
+                                        final list = doc.data()['list'];
+                                        if (list is List) {
+                                          productGroups =
+                                              List<dynamic>.from(list);
+                                        }
+                                        break;
+                                      }
+                                    }
+
+                                    if (productGroups.isEmpty) {
+                                      return Center(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.inventory_2_outlined,
+                                              size: 48,
+                                              color: ColorPalette.timberGreen
+                                                  .withOpacity(0.4),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                              "No product groups found.",
+                                              style: TextStyle(
+                                                fontFamily: "Nunito",
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: ColorPalette.timberGreen,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            const Text(
+                                              "Tap the + button to add a group.",
+                                              style: TextStyle(
+                                                fontFamily: "Nunito",
+                                                fontSize: 13,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+
+                                    productGroups.sort();
+                                    final screenWidth =
+                                        MediaQuery.of(context).size.width;
+                                    final int crossAxisCount =
+                                        screenWidth > 1200
+                                            ? 4
+                                            : screenWidth > 750
+                                                ? 3
+                                                : 2;
+
                                     return GridView.builder(
                                       gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 2,
-                                        crossAxisSpacing: 20,
-                                        mainAxisSpacing: 20,
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        childAspectRatio: 2.2,
+                                        crossAxisSpacing: 16,
+                                        mainAxisSpacing: 16,
                                       ),
-                                      itemCount: _productGroups.length,
+                                      itemCount: productGroups.length,
                                       itemBuilder: (context, index) {
                                         return ProductGroupCard(
-                                          name: _productGroups[index] as String,
-                                          key: UniqueKey(),
+                                          name: productGroups[index] as String,
+                                          key: ValueKey(productGroups[index]),
                                         );
                                       },
                                     );

@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:warehouse_management/functions/toast.dart';
+import 'package:warehouse_management/screens/signup.dart';
 import 'package:warehouse_management/utils/color_palette.dart';
 import 'package:warehouse_management/utils/svg_strings.dart';
 
@@ -14,29 +16,84 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-  bool _failed = false;
+  String _errorMessage = "";
   bool _isVisible = false;
   bool _loading = false;
 
   Future signIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = "Please enter both email and password.";
+      });
+      return;
+    }
+
     setState(() {
       _loading = true;
+      _errorMessage = "";
     });
     try {
-      await firebaseAuth
-          .signInWithEmailAndPassword(
-              email: _emailController.text, password: _passwordController.text,)
-          .then((value) {
-        showTextToast('Loged In Sucessfully!');
-      });
-    } catch (e) {
+      final value = await firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      showTextToast('Logged In Successfully!');
+      if (value.user != null) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(value.user!.uid)
+              .set({
+            'uid': value.user!.uid,
+            'email': email,
+            'lastLogin': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (_) {}
+      }
+    } on FirebaseAuthException catch (e) {
+      String msg = "Login failed!";
+      final code = e.code.toLowerCase();
+      final errorStr = (e.message ?? "").toLowerCase();
+
+      if (code.contains('configuration-not-found') ||
+          errorStr.contains('configuration_not_found') ||
+          code == 'configuration_not_found') {
+        msg =
+            "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+      } else if (code == 'operation-not-allowed') {
+        msg =
+            "Email/Password sign-in is disabled in Firebase Console > Authentication > Sign-in method.";
+      } else if (code == 'user-not-found' || code == 'invalid-credential') {
+        msg =
+            "User not found or invalid credentials. Click 'Sign Up' to create an account.";
+      } else if (code == 'wrong-password') {
+        msg = "Incorrect password. Please try again.";
+      } else if (code == 'invalid-email') {
+        msg = "Invalid email address format.";
+      } else if (e.message != null && e.message!.isNotEmpty) {
+        msg = e.message!;
+      }
       setState(() {
-        _failed = true;
+        _errorMessage = msg;
       });
+      showTextToast(msg);
+    } catch (e) {
+      if (e.toString().contains('CONFIGURATION_NOT_FOUND')) {
+        _errorMessage =
+            "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+      } else {
+        _errorMessage = "Error: $e";
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
-    setState(() {
-      _loading = false;
-    });
   }
 
   @override
@@ -194,15 +251,22 @@ class _LoginState extends State<Login> {
               const SizedBox(
                 height: 15,
               ),
-              Center(
-                child: Text(
-                  _failed ? "Enter valid credentials!" : "",
-                  style: const TextStyle(
-                    color: ColorPalette.mandy,
-                    fontFamily: "Nunito",
+              if (_errorMessage.isNotEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      _errorMessage,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: ColorPalette.mandy,
+                        fontFamily: "Nunito",
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(
                 height: 15,
               ),
@@ -215,7 +279,7 @@ class _LoginState extends State<Login> {
                     },
                     child: Container(
                       height: 50,
-                      width: 100,
+                      width: 105,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: ColorPalette.pacificBlue,
@@ -242,9 +306,50 @@ class _LoginState extends State<Login> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontFamily: "Nunito",
+                                  fontWeight: FontWeight.bold,
                                   color: ColorPalette.white,
                                 ),
                               ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SignUp(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 105,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: ColorPalette.white,
+                        border: Border.all(
+                          color: ColorPalette.pacificBlue,
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: const Offset(0, 3),
+                            blurRadius: 6,
+                            color: const Color(0xff000000).withOpacity(0.08),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontFamily: "Nunito",
+                            fontWeight: FontWeight.bold,
+                            color: ColorPalette.pacificBlue,
+                          ),
+                        ),
                       ),
                     ),
                   ),

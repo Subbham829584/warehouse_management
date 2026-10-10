@@ -22,17 +22,16 @@ class ProductDetailsPage extends StatelessWidget {
           right: 10,
         ),
         child: FloatingActionButton(
-          onPressed: () {
-            _firestore
-                .collection("products")
-                .doc(docID)
-                .update(product!.toMap())
-                .then((value) {
-              showTextToast('Updated Sucessfully!');
-            }).catchError((e) {
-              showTextToast('Failed!');
-            });
-            Navigator.of(context).pop();
+          onPressed: () async {
+            try {
+              final data = product!.toMap();
+              data['updatedAt'] = FieldValue.serverTimestamp();
+              await _firestore.collection("products").doc(docID).update(data);
+              showTextToast('Updated Successfully!');
+              Navigator.of(context).pop();
+            } catch (e) {
+              showTextToast('Failed: $e');
+            }
           },
           splashColor: ColorPalette.bondyBlue,
           backgroundColor: ColorPalette.pacificBlue,
@@ -96,17 +95,17 @@ class ProductDetailsPage extends StatelessWidget {
                           Icons.delete,
                           color: ColorPalette.timberGreen,
                         ),
-                        onPressed: () {
-                          _firestore
-                              .collection("products")
-                              .doc(docID)
-                              .delete()
-                              .then((value) {
-                            showTextToast('Deleted Sucessfully!');
-                          }).catchError((e) {
-                            showTextToast('Failed!');
-                          });
-                          Navigator.of(context).pop();
+                        onPressed: () async {
+                          try {
+                            await _firestore
+                                .collection("products")
+                                .doc(docID)
+                                .delete();
+                            showTextToast('Deleted Successfully!');
+                            Navigator.of(context).pop();
+                          } catch (e) {
+                            showTextToast('Failed: $e');
+                          }
                         },
                       ),
                     ],
@@ -232,10 +231,11 @@ class ProductDetailsPage extends StatelessWidget {
                                                 ),
                                                 height: 50,
                                                 child: TextFormField(
-                                                  initialValue: product!.cost ==
-                                                          null
-                                                      ? ''
-                                                      : product!.cost.toString(),
+                                                  initialValue:
+                                                      product!.cost == null
+                                                          ? ''
+                                                          : product!.cost
+                                                              .toString(),
                                                   onChanged: (value) {
                                                     product!.cost =
                                                         double.parse(value);
@@ -352,7 +352,8 @@ class ProductDetailsPage extends StatelessWidget {
                                           ),
                                           height: 50,
                                           child: TextFormField(
-                                            initialValue: product!.company ?? '',
+                                            initialValue:
+                                                product!.company ?? '',
                                             onChanged: (value) {
                                               product!.company = value;
                                             },
