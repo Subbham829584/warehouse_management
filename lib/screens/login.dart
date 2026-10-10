@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:warehouse_management/functions/toast.dart';
+import 'package:warehouse_management/screens/signup.dart';
 import 'package:warehouse_management/utils/color_palette.dart';
 import 'package:warehouse_management/utils/svg_strings.dart';
 
@@ -21,22 +23,37 @@ class _LoginState extends State<Login> {
   Future signIn() async {
     setState(() {
       _loading = true;
+      _failed = false;
     });
     try {
       await firebaseAuth
           .signInWithEmailAndPassword(
-              email: _emailController.text, password: _passwordController.text,)
-          .then((value) {
-        showTextToast('Loged In Sucessfully!');
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),)
+          .then((value) async {
+        showTextToast('Logged In Successfully!');
+        if (value.user != null) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(value.user!.uid)
+                .set({
+              'lastLogin': FieldValue.serverTimestamp(),
+              'email': _emailController.text.trim(),
+            }, SetOptions(merge: true));
+          } catch (_) {}
+        }
       });
     } catch (e) {
       setState(() {
         _failed = true;
       });
     }
-    setState(() {
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -215,7 +232,7 @@ class _LoginState extends State<Login> {
                     },
                     child: Container(
                       height: 50,
-                      width: 100,
+                      width: 105,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: ColorPalette.pacificBlue,
@@ -242,9 +259,50 @@ class _LoginState extends State<Login> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontFamily: "Nunito",
+                                  fontWeight: FontWeight.bold,
                                   color: ColorPalette.white,
                                 ),
                               ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SignUp(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 50,
+                      width: 105,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: ColorPalette.white,
+                        border: Border.all(
+                          color: ColorPalette.pacificBlue,
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: const Offset(0, 3),
+                            blurRadius: 6,
+                            color: const Color(0xff000000).withOpacity(0.08),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontFamily: "Nunito",
+                            fontWeight: FontWeight.bold,
+                            color: ColorPalette.pacificBlue,
+                          ),
+                        ),
                       ),
                     ),
                   ),
