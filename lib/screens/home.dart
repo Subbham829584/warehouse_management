@@ -369,11 +369,12 @@ class Home extends StatelessWidget {
                                     productGroups.sort();
                                     final screenWidth =
                                         MediaQuery.of(context).size.width;
-                                    final int crossAxisCount = screenWidth > 1200
-                                        ? 4
-                                        : screenWidth > 750
-                                            ? 3
-                                            : 2;
+                                    final int crossAxisCount =
+                                        screenWidth > 1200
+                                            ? 4
+                                            : screenWidth > 750
+                                                ? 3
+                                                : 2;
 
                                     return GridView.builder(
                                       gridDelegate:

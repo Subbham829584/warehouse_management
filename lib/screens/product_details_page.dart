@@ -231,10 +231,11 @@ class ProductDetailsPage extends StatelessWidget {
                                                 ),
                                                 height: 50,
                                                 child: TextFormField(
-                                                  initialValue: product!.cost ==
-                                                          null
-                                                      ? ''
-                                                      : product!.cost.toString(),
+                                                  initialValue:
+                                                      product!.cost == null
+                                                          ? ''
+                                                          : product!.cost
+                                                              .toString(),
                                                   onChanged: (value) {
                                                     product!.cost =
                                                         double.parse(value);
@@ -351,7 +352,8 @@ class ProductDetailsPage extends StatelessWidget {
                                           ),
                                           height: 50,
                                           child: TextFormField(
-                                            initialValue: product!.company ?? '',
+                                            initialValue:
+                                                product!.company ?? '',
                                             onChanged: (value) {
                                               product!.company = value;
                                             },
