@@ -102,7 +102,11 @@ class _SignUpState extends State<SignUp> {
         };
 
         // Save in global 'users' collection
-        await _firestore.collection('users').doc(user.uid).set(userData);
+        try {
+          await _firestore.collection('users').doc(user.uid).set(userData);
+        } catch (err) {
+          debugPrint('Warning: Could not save to Firestore users: $err');
+        }
 
         // Also save in '/warehouse/{warehouseId}/users' subcollection
         try {
@@ -125,15 +129,22 @@ class _SignUpState extends State<SignUp> {
       }
     } on FirebaseAuthException catch (e) {
       String msg = "Registration failed!";
-      if (e.code == 'email-already-in-use') {
+      final code = e.code.toLowerCase();
+      final errorStr = (e.message ?? "").toLowerCase();
+
+      if (code.contains('configuration-not-found') ||
+          errorStr.contains('configuration_not_found') ||
+          code == 'configuration_not_found') {
+        msg = "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+      } else if (code == 'email-already-in-use') {
         msg = "Email is already registered! Please login.";
-      } else if (e.code == 'weak-password') {
-        msg = "The password provided is too weak.";
-      } else if (e.code == 'invalid-email') {
+      } else if (code == 'weak-password') {
+        msg = "The password provided is too weak (minimum 6 characters).";
+      } else if (code == 'invalid-email') {
         msg = "The email address is not valid.";
-      } else if (e.code == 'operation-not-allowed') {
-        msg = "Email/Password sign-in is disabled in Firebase Console.";
-      } else if (e.message != null) {
+      } else if (code == 'operation-not-allowed') {
+        msg = "Email/Password sign-in is disabled in Firebase Console > Authentication > Sign-in method.";
+      } else if (e.message != null && e.message!.isNotEmpty) {
         msg = e.message!;
       }
       setState(() {
@@ -141,9 +152,12 @@ class _SignUpState extends State<SignUp> {
       });
       showTextToast(msg);
     } catch (e) {
-      setState(() {
+      if (e.toString().contains('CONFIGURATION_NOT_FOUND')) {
+        _errorMessage = "Firebase Auth is not enabled in Firebase Console! Go to Authentication > Click 'Get started' > Enable 'Email/Password'.";
+      } else {
         _errorMessage = "An unexpected error occurred: $e";
-      });
+      }
+      setState(() {});
       showTextToast("Error creating account");
     } finally {
       if (mounted) {
