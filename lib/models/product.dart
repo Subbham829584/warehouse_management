@@ -21,11 +21,11 @@ class Product {
 
     factory Product.fromMap(Map<String, dynamic> json) => Product(
         name: json["name"] as String?,
-        cost: json["cost"] as double?,
+        cost: (json["cost"] as num?)?.toDouble(),
         group: json["group"] as String?,
         location: json["location"] as String?,
         company: json["company"] as String?,
-        quantity: json["quantity"] as int?,
+        quantity: (json["quantity"] as num?)?.toInt(),
         image: json["image"] as String?,
         description: json["description"] as String?,
     );

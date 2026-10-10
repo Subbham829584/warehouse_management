@@ -101,11 +101,14 @@ class _SignUpState extends State<SignUp> {
           ],
         };
 
+        bool firestoreSaved = false;
+
         // Save in global 'users' collection
         try {
           await _firestore.collection('users').doc(user.uid).set(userData);
+          firestoreSaved = true;
         } catch (err) {
-          debugPrint('Warning: Could not save to Firestore users: $err');
+          debugPrint('Firestore users write failed: $err');
         }
 
         // Also save in '/warehouse/{warehouseId}/users' subcollection
@@ -117,12 +120,18 @@ class _SignUpState extends State<SignUp> {
               .doc(user.uid)
               .set(userData);
         } catch (_) {
-          // Ignore if subcollection rule restricts
+          // Ignore subcollection error if main collection handled
         }
 
-        showTextToast('Account Created Successfully!');
+        if (firestoreSaved) {
+          showTextToast('Account Created & Saved in Database!');
+        } else {
+          showTextToast(
+            'Auth created! Note: Firestore Rules blocked saving to users collection (Permission Denied). Update Rules in Firebase Console.',
+          );
+        }
 
-        // Pop back to main flow (which automatically listens to authStateChanges and navigates to Home)
+        // Pop back to login / auth flow
         if (mounted) {
           Navigator.of(context).pop();
         }

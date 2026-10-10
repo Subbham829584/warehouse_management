@@ -22,17 +22,32 @@ class NewProductPage extends StatelessWidget {
           right: 10,
         ),
         child: FloatingActionButton(
-          onPressed: () {
+          onPressed: () async {
+            final name = newProduct.name?.trim();
+            if (name == null || name.isEmpty) {
+              showTextToast('Please enter a product name!');
+              return;
+            }
             newProduct.group = group;
-            _firestore
-                .collection("products")
-                .add(newProduct.toMap())
-                .then((value) {
-              showTextToast('Added Sucessfully!');
-            }).catchError((e) {
-              showTextToast('Failed!');
-            });
-            Navigator.of(context).pop();
+            try {
+              final data = newProduct.toMap();
+              data['createdAt'] = FieldValue.serverTimestamp();
+              await _firestore.collection("products").add(data);
+
+              // Also sync into /warehouse collection for full consistency
+              try {
+                await _firestore
+                    .collection("warehouse")
+                    .doc("Aa3SUKLQScIhcYYkBB1K")
+                    .collection("products")
+                    .add(data);
+              } catch (_) {}
+
+              showTextToast('Added Successfully!');
+              Navigator.of(context).pop();
+            } catch (e) {
+              showTextToast('Failed to add: $e');
+            }
           },
           splashColor: ColorPalette.bondyBlue,
           backgroundColor: ColorPalette.pacificBlue,

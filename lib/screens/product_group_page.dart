@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:warehouse_management/functions/confirm_dialog.dart';
+import 'package:warehouse_management/functions/toast.dart';
 import 'package:warehouse_management/models/product.dart';
 import 'package:warehouse_management/screens/new_product_page.dart';
 import 'package:warehouse_management/screens/search_product_in_group.dart';
@@ -115,7 +117,36 @@ class ProductGroupPage extends StatelessWidget {
                               color: ColorPalette.timberGreen,
                             ),
                             onPressed: () {
-                              //TODO
+                              showConfirmDialog(
+                                context,
+                                "Are you sure you want to delete '$name' group?",
+                                "No",
+                                "Yes",
+                                () {
+                                  Navigator.of(context).pop();
+                                },
+                                () async {
+                                  Navigator.of(context).pop();
+                                  try {
+                                    final docRef = _firestore
+                                        .collection("utils")
+                                        .doc("productGroups");
+                                    final doc = await docRef.get();
+                                    if (doc.exists &&
+                                        doc.data() != null &&
+                                        doc.data()!['list'] is List) {
+                                      final list = List<dynamic>.from(
+                                          doc.data()!['list']);
+                                      list.remove(name);
+                                      await docRef.update({'list': list});
+                                    }
+                                    showTextToast('Product Group Deleted!');
+                                    Navigator.of(context).pop();
+                                  } catch (e) {
+                                    showTextToast('Failed to delete group: $e');
+                                  }
+                                },
+                              );
                             },
                           ),
                         ],
@@ -147,11 +178,11 @@ class ProductGroupPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
                           Expanded(
-                            child: StreamBuilder(
+                            child: StreamBuilder<
+                                QuerySnapshot<Map<String, dynamic>>>(
                               stream: _firestore
                                   .collection("products")
                                   .where("group", isEqualTo: name)
-                                  .orderBy('name')
                                   .snapshots(),
                               builder: (
                                 BuildContext context,
@@ -159,26 +190,88 @@ class ProductGroupPage extends StatelessWidget {
                                         QuerySnapshot<Map<String, dynamic>>>
                                     snapshot,
                               ) {
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Text(
+                                        "Error loading products: ${snapshot.error}",
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: ColorPalette.mandy,
+                                          fontFamily: "Nunito",
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
                                 if (!snapshot.hasData) {
                                   return const Center(
                                     child: SizedBox(
                                       height: 40,
                                       width: 40,
                                       child: CircularProgressIndicator(
-                                        color: Colors.black,
+                                        color: ColorPalette.pacificBlue,
                                       ),
                                     ),
                                   );
                                 }
+
+                                final docs = snapshot.data!.docs.toList();
+                                docs.sort((a, b) {
+                                  final aName = (a.data()['name'] ?? '')
+                                      .toString()
+                                      .toLowerCase();
+                                  final bName = (b.data()['name'] ?? '')
+                                      .toString()
+                                      .toLowerCase();
+                                  return aName.compareTo(bName);
+                                });
+
+                                if (docs.isEmpty) {
+                                  return Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.inventory_2_outlined,
+                                          size: 48,
+                                          color: ColorPalette.timberGreen
+                                              .withOpacity(0.4),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const Text(
+                                          "No products in this group yet.",
+                                          style: TextStyle(
+                                            fontFamily: "Nunito",
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: ColorPalette.timberGreen,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        const Text(
+                                          "Tap + below to add your first product.",
+                                          style: TextStyle(
+                                            fontFamily: "Nunito",
+                                            fontSize: 13,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+
                                 return ListView.builder(
-                                  itemCount: snapshot.data!.docs.length,
+                                  itemCount: docs.length,
                                   itemBuilder:
                                       (BuildContext context, int index) {
                                     return ProductCard(
                                       product: Product.fromMap(
-                                        snapshot.data!.docs[index].data(),
+                                        docs[index].data(),
                                       ),
-                                      docID: snapshot.data!.docs[index].id,
+                                      docID: docs[index].id,
                                     );
                                   },
                                 );

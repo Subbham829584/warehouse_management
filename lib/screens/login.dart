@@ -47,8 +47,9 @@ class _LoginState extends State<Login> {
               .collection('users')
               .doc(value.user!.uid)
               .set({
-            'lastLogin': FieldValue.serverTimestamp(),
+            'uid': value.user!.uid,
             'email': email,
+            'lastLogin': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         } catch (_) {}
       }
