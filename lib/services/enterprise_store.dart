@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:warehouse_management/models/batch_lot.dart';
 import 'package:warehouse_management/models/dispatch_order.dart';
 import 'package:warehouse_management/models/product.dart';
 import 'package:warehouse_management/models/purchase_order.dart';
+import 'package:warehouse_management/models/return_order.dart';
 import 'package:warehouse_management/models/stock_audit.dart';
 import 'package:warehouse_management/models/stock_movement.dart';
 import 'package:warehouse_management/models/supplier.dart';
+import 'package:warehouse_management/models/warehouse_equipment.dart';
 import 'package:warehouse_management/models/warehouse_zone.dart';
 import 'package:warehouse_management/repositories/inventory_repository.dart';
 
@@ -21,18 +24,27 @@ class EnterpriseStore extends ChangeNotifier {
   List<DispatchOrder> _dispatchOrders = [];
   List<WarehouseZone> _zones = [];
   List<StockAudit> _audits = [];
+  List<ReturnOrder> _returnOrders = [];
+  List<WarehouseEquipment> _equipment = [];
+  List<BatchLot> _batchLots = [];
 
   List<Supplier> get suppliers => List.unmodifiable(_suppliers);
   List<PurchaseOrder> get purchaseOrders => List.unmodifiable(_purchaseOrders);
   List<DispatchOrder> get dispatchOrders => List.unmodifiable(_dispatchOrders);
   List<WarehouseZone> get zones => List.unmodifiable(_zones);
   List<StockAudit> get audits => List.unmodifiable(_audits);
+  List<ReturnOrder> get returnOrders => List.unmodifiable(_returnOrders);
+  List<WarehouseEquipment> get equipment => List.unmodifiable(_equipment);
+  List<BatchLot> get batchLots => List.unmodifiable(_batchLots);
 
   int get pendingDispatchCount =>
       _dispatchOrders.where((o) => o.status == DispatchStatus.pending || o.status == DispatchStatus.picking).length;
 
   int get pendingPOCount =>
       _purchaseOrders.where((p) => p.status == POStatus.ordered || p.status == POStatus.partiallyReceived).length;
+
+  int get pendingRmaCount =>
+      _returnOrders.where((r) => r.status == RmaStatus.requested || r.status == RmaStatus.inspecting).length;
 
   // ==================== SUPPLIERS ====================
   void addSupplier(Supplier supplier) {
@@ -230,6 +242,87 @@ class EnterpriseStore extends ChangeNotifier {
       status: AuditStatus.completed,
       completedAt: DateTime.now(),
     );
+    notifyListeners();
+  }
+
+  // ==================== RETURNS & RMA ====================
+  void createReturnOrder(ReturnOrder order) {
+    _returnOrders = [order, ..._returnOrders];
+    notifyListeners();
+  }
+
+  Future<void> inspectReturnOrder({
+    required String rmaId,
+    required RmaStatus resolution,
+    required String notes,
+    required InventoryRepository repo,
+    required String userEmail,
+  }) async {
+    final idx = _returnOrders.indexWhere((r) => r.id == rmaId);
+    if (idx == -1) return;
+
+    final order = _returnOrders[idx];
+
+    // If restocked into active inventory, call stockIn!
+    if (resolution == RmaStatus.restocked) {
+      await repo.adjustStock(
+        productId: order.productId,
+        type: MovementType.stockIn,
+        amount: order.quantity,
+        userEmail: userEmail,
+        note: 'RMA ${order.rmaNumber} Restocked: $notes',
+      );
+    }
+
+    _returnOrders[idx] = order.copyWith(
+      status: resolution,
+      inspectionNotes: notes,
+      resolvedAt: DateTime.now(),
+    );
+    notifyListeners();
+  }
+
+  // ==================== EQUIPMENT & ASSETS ====================
+  void updateEquipmentStatus(String equipmentId, EquipmentStatus newStatus) {
+    final idx = _equipment.indexWhere((e) => e.id == equipmentId);
+    if (idx == -1) return;
+    _equipment[idx] = _equipment[idx].copyWith(status: newStatus);
+    notifyListeners();
+  }
+
+  void logEquipmentService({
+    required String equipmentId,
+    required String technician,
+    required String description,
+    required double cost,
+    required DateTime nextDueDate,
+  }) {
+    final idx = _equipment.indexWhere((e) => e.id == equipmentId);
+    if (idx == -1) return;
+
+    final eq = _equipment[idx];
+    final log = EquipmentServiceLog(
+      id: 'log_${DateTime.now().millisecondsSinceEpoch}',
+      date: DateTime.now(),
+      technician: technician,
+      description: description,
+      cost: cost,
+    );
+
+    _equipment[idx] = eq.copyWith(
+      status: EquipmentStatus.operational,
+      lastServiceDate: DateTime.now(),
+      nextServiceDate: nextDueDate,
+      serviceLogs: [log, ...eq.serviceLogs],
+    );
+    notifyListeners();
+  }
+
+  // ==================== BATCH & LOTS ====================
+  void quarantineBatch(String batchId) {
+    final idx = _batchLots.indexWhere((b) => b.id == batchId);
+    if (idx == -1) return;
+    _batchLots[idx] = _batchLots[idx].copyWith(status: BatchStatus.quarantined);
     notifyListeners();
   }
 
@@ -469,6 +562,154 @@ class EnterpriseStore extends ChangeNotifier {
           WarehouseBin(binCode: 'C-01-P2', aisle: 'Aisle 1', shelf: 'Floor Bay', capacity: 150, occupiedUnits: 90, primaryCategory: 'Bulk Storage'),
           WarehouseBin(binCode: 'C-02-P1', aisle: 'Aisle 2', shelf: 'Floor Bay', capacity: 150, occupiedUnits: 90, primaryCategory: 'Spare Parts'),
         ],
+      ),
+    ];
+
+    _returnOrders = [
+      ReturnOrder(
+        id: 'rma_301',
+        rmaNumber: 'RMA-2026-041',
+        customerName: 'TechNova Retail Hub',
+        productId: 'demo_1',
+        productName: 'USB-C Fast Charging Cable 2m',
+        quantity: 5,
+        reason: ReturnReason.defective,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        status: RmaStatus.requested,
+        refundAmount: 17.50,
+      ),
+      ReturnOrder(
+        id: 'rma_302',
+        rmaNumber: 'RMA-2026-039',
+        customerName: 'Metropolis Workspace Supplies',
+        productId: 'demo_3',
+        productName: 'Ergonomic Desk Mat (Leather)',
+        quantity: 2,
+        reason: ReturnReason.customerRemorse,
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        status: RmaStatus.restocked,
+        inspectionNotes: 'Unopened factory seal. Passed QC and returned to active shelf.',
+        resolvedAt: DateTime.now().subtract(const Duration(days: 2)),
+        refundAmount: 32.00,
+      ),
+      ReturnOrder(
+        id: 'rma_303',
+        rmaNumber: 'RMA-2026-035',
+        customerName: 'BlueSky Electronics Corp',
+        productId: 'demo_2',
+        productName: 'Wireless Bluetooth Mouse',
+        quantity: 1,
+        reason: ReturnReason.damagedInTransit,
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        status: RmaStatus.quarantined,
+        inspectionNotes: 'Crushed chassis from carrier transport. Flagged for insurance claim.',
+        resolvedAt: DateTime.now().subtract(const Duration(days: 4)),
+        refundAmount: 22.50,
+      ),
+    ];
+
+    _equipment = [
+      WarehouseEquipment(
+        id: 'eq_1',
+        assetTag: 'FL-01',
+        name: 'Toyota 8FBE15 Electric Forklift',
+        type: EquipmentType.forklift,
+        assignedZone: 'Zone C - Bulk Pallets',
+        status: EquipmentStatus.operational,
+        operatingHours: 1420,
+        batteryLevelPct: 88,
+        lastServiceDate: DateTime.now().subtract(const Duration(days: 28)),
+        nextServiceDate: DateTime.now().add(const Duration(days: 62)),
+        serviceLogs: [
+          EquipmentServiceLog(
+            id: 'log_101',
+            date: DateTime.now().subtract(const Duration(days: 28)),
+            technician: 'Marcus Vance',
+            description: 'Hydraulic seal inspection, mast lubrication, and brake check.',
+            cost: 350.00,
+          ),
+        ],
+      ),
+      WarehouseEquipment(
+        id: 'eq_2',
+        assetTag: 'PJ-04',
+        name: 'Crown Heavy-Duty Hydraulic Pallet Jack',
+        type: EquipmentType.palletJack,
+        assignedZone: 'Zone A - Electronics',
+        status: EquipmentStatus.maintenanceDue,
+        operatingHours: 850,
+        batteryLevelPct: 100,
+        lastServiceDate: DateTime.now().subtract(const Duration(days: 85)),
+        nextServiceDate: DateTime.now().subtract(const Duration(days: 5)),
+        serviceLogs: const [],
+      ),
+      WarehouseEquipment(
+        id: 'eq_3',
+        assetTag: 'SCN-12',
+        name: 'Zebra TC26 Android Barcode Terminal',
+        type: EquipmentType.barcodeScanner,
+        assignedZone: 'Dock 2 - Receiving',
+        status: EquipmentStatus.operational,
+        operatingHours: 640,
+        batteryLevelPct: 92,
+        lastServiceDate: DateTime.now().subtract(const Duration(days: 45)),
+        nextServiceDate: DateTime.now().add(const Duration(days: 135)),
+        serviceLogs: const [],
+      ),
+      WarehouseEquipment(
+        id: 'eq_4',
+        assetTag: 'PRN-02',
+        name: 'Zebra ZT411 Industrial Thermal Label Printer',
+        type: EquipmentType.labelPrinter,
+        assignedZone: 'Dispatch Shipping Bay',
+        status: EquipmentStatus.operational,
+        operatingHours: 1980,
+        batteryLevelPct: 100,
+        lastServiceDate: DateTime.now().subtract(const Duration(days: 15)),
+        nextServiceDate: DateTime.now().add(const Duration(days: 75)),
+        serviceLogs: const [],
+      ),
+    ];
+
+    _batchLots = [
+      BatchLot(
+        id: 'lot_01',
+        batchNumber: 'LOT-2026-X89',
+        productId: 'demo_1',
+        productName: 'USB-C Fast Charging Cable 2m',
+        sku: 'CBL-USBC-2M',
+        initialQuantity: 200,
+        remainingQuantity: 145,
+        manufacturingDate: DateTime.now().subtract(const Duration(days: 60)),
+        expiryDate: DateTime.now().add(const Duration(days: 300)),
+        storageLocation: 'A-01-01',
+        status: BatchStatus.active,
+      ),
+      BatchLot(
+        id: 'lot_02',
+        batchNumber: 'LOT-2026-B12',
+        productId: 'demo_3',
+        productName: 'Ergonomic Desk Mat (Leather)',
+        sku: 'MAT-DSK-BRN',
+        initialQuantity: 100,
+        remainingQuantity: 35,
+        manufacturingDate: DateTime.now().subtract(const Duration(days: 180)),
+        expiryDate: DateTime.now().add(const Duration(days: 35)), // Near expiry FEFO priority
+        storageLocation: 'B-01-02',
+        status: BatchStatus.nearExpiry,
+      ),
+      BatchLot(
+        id: 'lot_03',
+        batchNumber: 'LOT-2025-Q44',
+        productId: 'demo_2',
+        productName: 'Wireless Bluetooth Mouse',
+        sku: 'MOU-WL-BLK',
+        initialQuantity: 80,
+        remainingQuantity: 10,
+        manufacturingDate: DateTime.now().subtract(const Duration(days: 360)),
+        expiryDate: DateTime.now().subtract(const Duration(days: 5)), // Expired
+        storageLocation: 'A-02-02',
+        status: BatchStatus.expired,
       ),
     ];
   }
