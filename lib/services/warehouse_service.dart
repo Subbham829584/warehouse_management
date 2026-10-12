@@ -455,7 +455,7 @@ class WarehouseService {
         if (group == null || group.isEmpty) return list;
         return list
             .where((item) =>
-                item.product.group?.toLowerCase() == group.toLowerCase())
+                item.product.group.toLowerCase() == group.toLowerCase())
             .toList();
       });
     }
@@ -525,11 +525,11 @@ class WarehouseService {
           final p = Product.fromMap(doc.data());
           final matchesGroup = group == null ||
               group.isEmpty ||
-              (p.group?.toLowerCase() == group.toLowerCase());
+              (p.group.toLowerCase() == group.toLowerCase());
           final matchesName =
-              p.name?.toLowerCase().contains(cleanQuery) ?? false;
+              p.name.toLowerCase().contains(cleanQuery);
           final matchesCompany =
-              p.company?.toLowerCase().contains(cleanQuery) ?? false;
+              p.company.toLowerCase().contains(cleanQuery);
           if (matchesGroup && (matchesName || matchesCompany)) {
             results.add(WarehouseProductItem(id: doc.id, product: p));
           }
@@ -540,11 +540,11 @@ class WarehouseService {
       final results = _mockProducts.where((item) {
         final matchesGroup = group == null ||
             group.isEmpty ||
-            (item.product.group?.toLowerCase() == group.toLowerCase());
+            (item.product.group.toLowerCase() == group.toLowerCase());
         final nameMatches =
-            item.product.name?.toLowerCase().contains(cleanQuery) ?? false;
+            item.product.name.toLowerCase().contains(cleanQuery);
         final companyMatches =
-            item.product.company?.toLowerCase().contains(cleanQuery) ?? false;
+            item.product.company.toLowerCase().contains(cleanQuery);
         return matchesGroup && (nameMatches || companyMatches);
       }).toList();
 
