@@ -45,7 +45,8 @@ class AppScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AppScope old) {
-    final should = repo != old.repo || isDemo != old.isDemo || userEmail != old.userEmail;
+    final should =
+        repo != old.repo || isDemo != old.isDemo || userEmail != old.userEmail;
     if (should) _lastKnownScope = this;
     return should;
   }

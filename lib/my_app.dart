@@ -32,7 +32,8 @@ class _MyAppState extends State<MyApp> {
       stream: _authService.authChanges,
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
-        final isAuthWaiting = authSnapshot.connectionState == ConnectionState.waiting;
+        final isAuthWaiting =
+            authSnapshot.connectionState == ConnectionState.waiting;
 
         if (isAuthWaiting) {
           return MaterialApp(

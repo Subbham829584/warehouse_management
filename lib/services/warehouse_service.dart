@@ -526,10 +526,8 @@ class WarehouseService {
           final matchesGroup = group == null ||
               group.isEmpty ||
               (p.group.toLowerCase() == group.toLowerCase());
-          final matchesName =
-              p.name.toLowerCase().contains(cleanQuery);
-          final matchesCompany =
-              p.company.toLowerCase().contains(cleanQuery);
+          final matchesName = p.name.toLowerCase().contains(cleanQuery);
+          final matchesCompany = p.company.toLowerCase().contains(cleanQuery);
           if (matchesGroup && (matchesName || matchesCompany)) {
             results.add(WarehouseProductItem(id: doc.id, product: p));
           }
