@@ -80,7 +80,7 @@ class GroupsPage extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: cols,
-                  childAspectRatio: 2.0,
+                  childAspectRatio: w > 1200 ? 2.0 : w > 750 ? 1.6 : 1.32,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
@@ -88,10 +88,13 @@ class GroupsPage extends StatelessWidget {
                 itemBuilder: (_, i) {
                   final inGroup =
                       all.where((p) => p.product.group == groups[i]).toList();
+                  final val = inGroup.fold<double>(
+                      0.0, (acc, item) => acc + item.product.totalValue);
                   return ProductGroupCard(
                     key: ValueKey(groups[i]),
                     name: groups[i],
                     count: pSnap.hasData ? inGroup.length : null,
+                    totalValue: pSnap.hasData ? val : null,
                     lowCount: inGroup
                         .where((p) =>
                             p.product.isLowStock || p.product.isOutOfStock)
