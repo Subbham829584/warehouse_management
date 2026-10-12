@@ -73,7 +73,8 @@ class ProductGroupCard extends StatelessWidget {
                   const Spacer(),
                   if (hasAlert)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: const Color(0xffe8a317).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -81,7 +82,8 @@ class ProductGroupCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.warning_amber_rounded, size: 12, color: Color(0xffe8a317)),
+                          const Icon(Icons.warning_amber_rounded,
+                              size: 12, color: Color(0xffe8a317)),
                           const SizedBox(width: 3),
                           Text(
                             '$lowCount',
