@@ -72,9 +72,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           final classC =
               abcAnalysis.where((i) => i.abcClass == AbcClass.c).toList();
 
-          final aVal = classA.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
-          final bVal = classB.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
-          final cVal = classC.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
+          final aVal =
+              classA.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
+          final bVal =
+              classB.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
+          final cVal =
+              classC.fold(0.0, (acc, i) => acc + i.item.product.totalValue);
 
           final reorderRiskItems =
               abcAnalysis.where((i) => i.daysOfSupply <= 7).toList();
@@ -152,15 +155,27 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                       child: Row(
                         children: [
                           Expanded(
-                            flex: (aVal / (totalValuation == 0 ? 1 : totalValuation) * 100).round().clamp(1, 100),
+                            flex: (aVal /
+                                    (totalValuation == 0 ? 1 : totalValuation) *
+                                    100)
+                                .round()
+                                .clamp(1, 100),
                             child: Container(height: 8, color: Colors.amber),
                           ),
                           Expanded(
-                            flex: (bVal / (totalValuation == 0 ? 1 : totalValuation) * 100).round().clamp(1, 100),
+                            flex: (bVal /
+                                    (totalValuation == 0 ? 1 : totalValuation) *
+                                    100)
+                                .round()
+                                .clamp(1, 100),
                             child: Container(height: 8, color: Colors.blue),
                           ),
                           Expanded(
-                            flex: (cVal / (totalValuation == 0 ? 1 : totalValuation) * 100).round().clamp(1, 100),
+                            flex: (cVal /
+                                    (totalValuation == 0 ? 1 : totalValuation) *
+                                    100)
+                                .round()
+                                .clamp(1, 100),
                             child: Container(height: 8, color: Colors.teal),
                           ),
                         ],
@@ -277,7 +292,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               ),
               const SizedBox(height: 8),
               // Item Cards
-              ...displayedItems.map((item) => _buildAbcItemTile(item, currency)),
+              ...displayedItems
+                  .map((item) => _buildAbcItemTile(item, currency)),
               const SizedBox(height: 40),
             ],
           );
@@ -496,7 +512,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       }
 
       // Model days of supply: quantity divided by estimated velocity (1.5 - 4 per day)
-      final dailyDemand = (p.product.quantity > 50 ? 4 : (p.product.quantity > 20 ? 2 : 1));
+      final dailyDemand =
+          (p.product.quantity > 50 ? 4 : (p.product.quantity > 20 ? 2 : 1));
       final days = (p.product.quantity / dailyDemand).round();
 
       results.add(AbcItem(
