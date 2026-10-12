@@ -116,7 +116,7 @@ class Home extends StatelessWidget {
                             } catch (e) {
                               showTextToast("Error: $e");
                             }
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.of(context).pop();
                             }
                             _newProductGroup.text = "";

@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Deploy with:  firebase deploy --only firestore:rules,firestore:indexes
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isMember(wid) {
+      return signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/warehouse/$(wid)).data.members;
+    }
+
+    // A user can read/write only their own profile and cannot self-promote.
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == 'staff';
+      allow update: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+
+    match /warehouse/{wid} {
+      // Creating your own warehouse (first login only).
+      allow create: if signedIn()
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.members == [request.auth.uid];
+      allow read, update: if isMember(wid);
+      allow delete: if false;
+
+      match /product_groups/{id} {
+        allow read, write: if isMember(wid);
+      }
+
+      match /products/{id} {
+        allow read, delete: if isMember(wid);
+        allow create, update: if isMember(wid)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.quantity is int
+          && request.resource.data.quantity >= 0
+          && request.resource.data.cost is number
+          && request.resource.data.cost >= 0;
+      }
+
+      // Audit log is append-only: nobody can edit or delete history.
+      match /stock_movements/{id} {
+        allow read: if isMember(wid);
+        allow create: if isMember(wid)
+          && request.resource.data.userEmail == request.auth.token.email;
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

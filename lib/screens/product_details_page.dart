@@ -1,510 +1,509 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:warehouse_management/functions/toast.dart';
+import 'package:warehouse_management/core/app_scope.dart';
+import 'package:warehouse_management/core/formatters.dart';
+import 'package:warehouse_management/core/ui.dart';
 import 'package:warehouse_management/models/product.dart';
+import 'package:warehouse_management/models/stock_movement.dart';
+import 'package:warehouse_management/screens/product_form_page.dart';
 import 'package:warehouse_management/utils/color_palette.dart';
-import 'package:warehouse_management/widgets/location_drop_down.dart';
+import 'package:warehouse_management/widgets/empty_state.dart';
+import 'package:warehouse_management/widgets/stock_badge.dart';
 
-class ProductDetailsPage extends StatelessWidget {
-  final Product? product;
-  final String? docID;
-  ProductDetailsPage({Key? key, this.product, this.docID}) : super(key: key);
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class MovementTile extends StatelessWidget {
+  const MovementTile(this.movement, {super.key});
+  final StockMovement movement;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 10,
-          right: 10,
-        ),
-        child: FloatingActionButton(
-          onPressed: () async {
-            try {
-              final data = product!.toMap();
-              data['updatedAt'] = FieldValue.serverTimestamp();
-              await _firestore.collection("products").doc(docID).update(data);
-              showTextToast('Updated Successfully!');
-              Navigator.of(context).pop();
-            } catch (e) {
-              showTextToast('Failed: $e');
-            }
-          },
-          splashColor: ColorPalette.bondyBlue,
-          backgroundColor: ColorPalette.pacificBlue,
-          child: const Icon(
-            Icons.done,
-            color: ColorPalette.white,
-          ),
+    final isPositive = movement.change > 0;
+    final isNegative = movement.change < 0;
+    final color = isPositive
+        ? const Color(0xff2e9e6b)
+        : isNegative
+            ? const Color(0xffe75757)
+            : const Color(0xffe8a317);
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+      leading: CircleAvatar(
+        backgroundColor: color.withValues(alpha: 0.15),
+        child: Icon(
+          isPositive
+              ? Icons.arrow_downward
+              : isNegative
+                  ? Icons.arrow_upward
+                  : Icons.sync,
+          color: color,
         ),
       ),
-      body: Container(
-        color: ColorPalette.pacificBlue,
-        child: SafeArea(
-          child: Container(
-            color: ColorPalette.aquaHaze,
-            height: double.infinity,
-            width: double.infinity,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(
-                    top: 10,
-                    left: 10,
-                    right: 15,
+      title: Text(
+        movement.productName.isEmpty ? 'Product' : movement.productName,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${movement.type.label} • ${Fmt.dateTime(movement.createdAt)}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          if (movement.note.isNotEmpty)
+            Text(
+              movement.note,
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          if (movement.userEmail.isNotEmpty)
+            Text(
+              'By: ${movement.userEmail}',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+        ],
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '${isPositive ? '+' : ''}${movement.change}',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            'Qty: ${movement.quantityAfter}',
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProductDetailsPage extends StatelessWidget {
+  final ProductItem? item;
+  final Product? product;
+  final String? docID;
+
+  const ProductDetailsPage({
+    super.key,
+    this.item,
+    this.product,
+    this.docID,
+  });
+
+  String get _id => item?.id ?? docID ?? '';
+
+  Future<void> _adjustStock(
+    BuildContext context, {
+    required MovementType type,
+    required Product currentProduct,
+  }) async {
+    final qtyCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    final title = switch (type) {
+      MovementType.stockIn => 'Stock In (Receive)',
+      MovementType.stockOut => 'Stock Out (Dispatch)',
+      MovementType.adjustment => 'Stock Count / Audit',
+    };
+    final label = switch (type) {
+      MovementType.stockIn => 'Quantity to add',
+      MovementType.stockOut => 'Quantity to remove',
+      MovementType.adjustment => 'Actual count on shelf',
+    };
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: qtyCtrl,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: label,
+                helperText: type == MovementType.stockOut
+                    ? 'Available: ${currentProduct.quantity}'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Note (optional)',
+                hintText: 'e.g. PO-102 or Invoice #',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    final qty = int.tryParse(qtyCtrl.text.trim());
+    if (qty == null || qty < 0 || (qty == 0 && type != MovementType.adjustment)) {
+      if (context.mounted) showMessage(context, 'Enter a valid quantity', error: true);
+      return;
+    }
+
+    final scope = AppScope.of(context);
+    try {
+      await scope.repo.adjustStock(
+        productId: _id,
+        type: type,
+        amount: qty,
+        userEmail: scope.userEmail,
+        note: noteCtrl.text.trim(),
+      );
+      if (context.mounted) {
+        showMessage(context, 'Stock updated successfully');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showMessage(context, '$e'.replaceFirst('Bad state: ', ''), error: true);
+      }
+    }
+  }
+
+  Future<void> _delete(BuildContext context, Product p) async {
+    final ok = await confirm(
+      context,
+      title: 'Delete product?',
+      message: 'Are you sure you want to delete "${p.name}"? This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    );
+    if (!ok) return;
+
+    final repo = AppScope.of(context).repo;
+    try {
+      await repo.deleteProduct(_id);
+      if (context.mounted) {
+        showMessage(context, 'Product deleted');
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) showMessage(context, 'Failed: $e', error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = AppScope.of(context).repo;
+    final initialProduct = item?.product ?? product ?? const Product();
+
+    return StreamBuilder<List<ProductItem>>(
+      stream: repo.watchProducts(),
+      builder: (context, snap) {
+        final currentItem = snap.data?.firstWhere(
+              (p) => p.id == _id,
+              orElse: () => ProductItem(id: _id, product: initialProduct),
+            ) ??
+            ProductItem(id: _id, product: initialProduct);
+        final p = currentItem.product;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(p.name.isEmpty ? 'Product Details' : p.name),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit details',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProductFormPage(item: currentItem),
                   ),
-                  width: double.infinity,
-                  height: 90,
-                  decoration: const BoxDecoration(
-                    color: ColorPalette.pacificBlue,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Delete product',
+                onPressed: () => _delete(context, p),
+              ),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Product Hero Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.chevron_left_rounded,
-                              size: 35,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 100,
+                          width: 100,
+                          color: ColorPalette.geyser.withValues(alpha: 0.3),
+                          child: (p.image.trim().isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: p.image.trim(),
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) => const Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 40,
+                                    color: ColorPalette.timberGreen,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 40,
+                                  color: ColorPalette.timberGreen,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              p.name.isEmpty ? 'Unnamed' : p.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: ColorPalette.timberGreen,
+                              ),
                             ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                            const SizedBox(height: 4),
+                            StockBadge(p),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${p.quantity} ${p.unit} in stock',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: ColorPalette.nileBlue,
+                              ),
+                            ),
+                            Text(
+                              'Value: ${Fmt.money(p.totalValue)}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: ColorPalette.timberGreen.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Quick Stock Actions
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Stock Operations',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: ColorPalette.timberGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xff2e9e6b),
+                              ),
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Stock In'),
+                              onPressed: () => _adjustStock(
+                                context,
+                                type: MovementType.stockIn,
+                                currentProduct: p,
+                              ),
+                            ),
                           ),
-                          const Text(
-                            "Edit Product",
-                            style: TextStyle(
-                              fontFamily: "Nunito",
-                              fontSize: 28,
-                              color: ColorPalette.timberGreen,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xffe75757),
+                              ),
+                              icon: const Icon(Icons.remove, size: 18),
+                              label: const Text('Stock Out'),
+                              onPressed: () => _adjustStock(
+                                context,
+                                type: MovementType.stockOut,
+                                currentProduct: p,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.pin, size: 18),
+                              label: const Text('Count'),
+                              onPressed: () => _adjustStock(
+                                context,
+                                type: MovementType.adjustment,
+                                currentProduct: p,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete,
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Metadata card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Product Information',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                           color: ColorPalette.timberGreen,
                         ),
-                        onPressed: () async {
-                          try {
-                            await _firestore
-                                .collection("products")
-                                .doc(docID)
-                                .delete();
-                            showTextToast('Deleted Successfully!');
-                            Navigator.of(context).pop();
-                          } catch (e) {
-                            showTextToast('Failed: $e');
+                      ),
+                      const Divider(height: 24),
+                      _infoRow('Group', p.group.isEmpty ? '-' : p.group),
+                      _infoRow('Company / Brand', p.company.isEmpty ? '-' : p.company),
+                      _infoRow('Storage Location', p.location.isEmpty ? '-' : p.location),
+                      _infoRow('SKU', p.sku.isEmpty ? '-' : p.sku),
+                      _infoRow('Barcode', p.barcode.isEmpty ? '-' : p.barcode),
+                      _infoRow('Unit Cost', Fmt.money(p.cost)),
+                      _infoRow('Min Stock Alert Level', '${p.minStock} ${p.unit}'),
+                      if (p.description.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Description',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          p.description,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Activity / Audit Trail
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Audit Trail',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: ColorPalette.timberGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      StreamBuilder<List<StockMovement>>(
+                        stream: repo.watchMovements(productId: _id),
+                        builder: (context, mSnap) {
+                          if (mSnap.hasError) return ErrorState(mSnap.error);
+                          if (!mSnap.hasData) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
                           }
+                          final list = mSnap.data!;
+                          if (list.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: Text('No movements recorded yet.')),
+                            );
+                          }
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: list.length,
+                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            itemBuilder: (_, i) => MovementTile(list[i]),
+                          );
                         },
                       ),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: SizedBox(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: const [
-                              SizedBox(
-                                height: 20,
-                              ),
-                            ],
-                          ),
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: double.infinity,
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 50,
-                                  ),
-                                  margin: const EdgeInsets.only(top: 75),
-                                  decoration: const BoxDecoration(
-                                    color: ColorPalette.white,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16),
-                                    ),
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 8,
-                                            bottom: 12,
-                                          ),
-                                          child: Text(
-                                            "Product Group : ${product!.group}",
-                                            style: const TextStyle(
-                                              fontFamily: "Nunito",
-                                              fontSize: 17,
-                                              color: ColorPalette.nileBlue,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: ColorPalette.white,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: const Offset(0, 3),
-                                                blurRadius: 6,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.1),
-                                              ),
-                                            ],
-                                          ),
-                                          height: 50,
-                                          child: TextFormField(
-                                            initialValue: product!.name ?? '',
-                                            onChanged: (value) {
-                                              product!.name = value;
-                                            },
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            key: UniqueKey(),
-                                            keyboardType: TextInputType.text,
-                                            style: const TextStyle(
-                                              fontFamily: "Nunito",
-                                              fontSize: 16,
-                                              color: ColorPalette.nileBlue,
-                                            ),
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              hintText: "Product Name",
-                                              filled: true,
-                                              fillColor: Colors.transparent,
-                                              hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
-                                                fontSize: 16,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.58),
-                                              ),
-                                            ),
-                                            cursorColor:
-                                                ColorPalette.timberGreen,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: ColorPalette.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      offset:
-                                                          const Offset(0, 3),
-                                                      blurRadius: 6,
-                                                      color: ColorPalette
-                                                          .nileBlue
-                                                          .withOpacity(0.1),
-                                                    ),
-                                                  ],
-                                                ),
-                                                height: 50,
-                                                child: TextFormField(
-                                                  initialValue:
-                                                      product!.cost == null
-                                                          ? ''
-                                                          : product!.cost
-                                                              .toString(),
-                                                  onChanged: (value) {
-                                                    product!.cost =
-                                                        double.parse(value);
-                                                  },
-                                                  textInputAction:
-                                                      TextInputAction.next,
-                                                  key: UniqueKey(),
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  style: const TextStyle(
-                                                    fontFamily: "Nunito",
-                                                    fontSize: 16,
-                                                    color:
-                                                        ColorPalette.nileBlue,
-                                                  ),
-                                                  decoration: InputDecoration(
-                                                    border: InputBorder.none,
-                                                    hintText: "Cost",
-                                                    filled: true,
-                                                    fillColor:
-                                                        Colors.transparent,
-                                                    hintStyle: TextStyle(
-                                                      fontFamily: "Nunito",
-                                                      fontSize: 16,
-                                                      color: ColorPalette
-                                                          .nileBlue
-                                                          .withOpacity(0.58),
-                                                    ),
-                                                  ),
-                                                  cursorColor:
-                                                      ColorPalette.timberGreen,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              width: 20,
-                                            ),
-                                            Expanded(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: ColorPalette.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      offset:
-                                                          const Offset(0, 3),
-                                                      blurRadius: 6,
-                                                      color: ColorPalette
-                                                          .nileBlue
-                                                          .withOpacity(0.1),
-                                                    ),
-                                                  ],
-                                                ),
-                                                height: 50,
-                                                child: TextFormField(
-                                                  initialValue:
-                                                      product!.quantity == null
-                                                          ? ''
-                                                          : product!.quantity
-                                                              .toString(),
-                                                  onChanged: (value) {
-                                                    product!.quantity =
-                                                        int.parse(value);
-                                                  },
-                                                  textInputAction:
-                                                      TextInputAction.next,
-                                                  key: UniqueKey(),
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  style: const TextStyle(
-                                                    fontFamily: "Nunito",
-                                                    fontSize: 16,
-                                                    color:
-                                                        ColorPalette.nileBlue,
-                                                  ),
-                                                  decoration: InputDecoration(
-                                                    border: InputBorder.none,
-                                                    hintText: "Quantity",
-                                                    filled: true,
-                                                    fillColor:
-                                                        Colors.transparent,
-                                                    hintStyle: TextStyle(
-                                                      fontFamily: "Nunito",
-                                                      fontSize: 16,
-                                                      color: ColorPalette
-                                                          .nileBlue
-                                                          .withOpacity(0.58),
-                                                    ),
-                                                  ),
-                                                  cursorColor:
-                                                      ColorPalette.timberGreen,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: ColorPalette.white,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: const Offset(0, 3),
-                                                blurRadius: 6,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.1),
-                                              ),
-                                            ],
-                                          ),
-                                          height: 50,
-                                          child: TextFormField(
-                                            initialValue:
-                                                product!.company ?? '',
-                                            onChanged: (value) {
-                                              product!.company = value;
-                                            },
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            key: UniqueKey(),
-                                            keyboardType: TextInputType.text,
-                                            style: const TextStyle(
-                                              fontFamily: "Nunito",
-                                              fontSize: 16,
-                                              color: ColorPalette.nileBlue,
-                                            ),
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              hintText: "Company",
-                                              filled: true,
-                                              fillColor: Colors.transparent,
-                                              hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
-                                                fontSize: 16,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.58),
-                                              ),
-                                            ),
-                                            cursorColor:
-                                                ColorPalette.timberGreen,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: ColorPalette.white,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: const Offset(0, 3),
-                                                blurRadius: 6,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.1),
-                                              ),
-                                            ],
-                                          ),
-                                          height: 50,
-                                          child: TextFormField(
-                                            initialValue:
-                                                product!.description ?? '',
-                                            onChanged: (value) {
-                                              product!.description = value;
-                                            },
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            key: UniqueKey(),
-                                            keyboardType: TextInputType.text,
-                                            style: const TextStyle(
-                                              fontFamily: "Nunito",
-                                              fontSize: 16,
-                                              color: ColorPalette.nileBlue,
-                                            ),
-                                            decoration: InputDecoration(
-                                              border: InputBorder.none,
-                                              hintText: "Description",
-                                              filled: true,
-                                              fillColor: Colors.transparent,
-                                              hintStyle: TextStyle(
-                                                fontFamily: "Nunito",
-                                                fontSize: 16,
-                                                color: ColorPalette.nileBlue
-                                                    .withOpacity(0.58),
-                                              ),
-                                            ),
-                                            cursorColor:
-                                                ColorPalette.timberGreen,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        const Padding(
-                                          padding: EdgeInsets.only(
-                                            left: 8,
-                                            bottom: 5,
-                                          ),
-                                          child: Text(
-                                            "Location",
-                                            style: TextStyle(
-                                              fontFamily: "Nunito",
-                                              fontSize: 14,
-                                              color: ColorPalette.nileBlue,
-                                            ),
-                                          ),
-                                        ),
-                                        LocationDD(product: product),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: SizedBox(
-                                      height: 100,
-                                      width: 100,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(11),
-                                        child: Container(
-                                          color: ColorPalette.white,
-                                          child: Container(
-                                            color: ColorPalette.timberGreen
-                                                .withOpacity(0.1),
-                                            child: (product!.image == null)
-                                                ? Center(
-                                                    child: Icon(
-                                                      Icons.image,
-                                                      color: ColorPalette
-                                                          .nileBlue
-                                                          .withOpacity(0.5),
-                                                    ),
-                                                  )
-                                                : CachedNetworkImage(
-                                                    fit: BoxFit.cover,
-                                                    imageUrl: product!.image!,
-                                                    errorWidget:
-                                                        (context, s, a) {
-                                                      return Icon(
-                                                        Icons.image,
-                                                        color: ColorPalette
-                                                            .nileBlue
-                                                            .withOpacity(0.5),
-                                                      );
-                                                    },
-                                                  ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: ColorPalette.timberGreen.withValues(alpha: 0.7),
             ),
           ),
-        ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ColorPalette.timberGreen,
+            ),
+          ),
+        ],
       ),
     );
   }
