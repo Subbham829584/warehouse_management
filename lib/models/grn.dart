@@ -15,7 +15,7 @@ extension GrnStatusX on GrnStatus {
       .firstWhere((e) => e.name == s, orElse: () => GrnStatus.draft);
 }
 
-/// One line in a GRN receipt — maps to a PO line item.
+/// One line in a GRN receipt - maps to a PO line item.
 class GrnLineItem {
   const GrnLineItem({
     required this.productId,
@@ -88,7 +88,7 @@ class GrnLineItem {
       );
 }
 
-/// Goods Received Note — connects a PO to actual physical receipt.
+/// Goods Received Note - connects a PO to actual physical receipt.
 class GoodsReceivedNote {
   const GoodsReceivedNote({
     required this.id,

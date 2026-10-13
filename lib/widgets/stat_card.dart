@@ -43,7 +43,7 @@ class StatCard extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: ColorPalette.timberGreen)),
+                            color: ColorPalette.timberGreen,),),
                   ),
                   Text(label,
                       maxLines: 1,
@@ -51,11 +51,11 @@ class StatCard extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 12,
                           color:
-                              ColorPalette.timberGreen.withValues(alpha: 0.6))),
+                              ColorPalette.timberGreen.withValues(alpha: 0.6),),),
                 ],
               ),
             ),
-          ]),
+          ],),
         ),
       ),
     );

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:warehouse_management/core/app_scope.dart';
 import 'package:warehouse_management/models/pick_list.dart';
@@ -15,7 +15,6 @@ class PickListPage extends StatefulWidget {
 
 class _PickListPageState extends State<PickListPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String _selectedZone = 'All Zones';
 
   @override
   void initState() {
@@ -71,7 +70,7 @@ class _PickListPageState extends State<PickListPage> with SingleTickerProviderSt
               _buildPickList(context, completed),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
+          floatingActionButton: FloatingActionButton.extended(heroTag: null,
             icon: const Icon(Icons.playlist_add),
             label: const Text('Create Pick List'),
             backgroundColor: ColorPalette.nileBlue,
@@ -247,13 +246,13 @@ class _PickListPageState extends State<PickListPage> with SingleTickerProviderSt
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('• Zone Picking:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('â€¢ Zone Picking:', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('The warehouse is partitioned into distinct zones (e.g. Zone A, Zone B). Pickers stay in their zone and pick only designated SKU lines.', style: TextStyle(fontSize: 13)),
             SizedBox(height: 10),
-            Text('• Bin-Sequence Walk Path:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('â€¢ Bin-Sequence Walk Path:', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('Pick lines are strictly ordered by bin address (A-01 -> A-02) so the picker never doubles back or wastes steps.', style: TextStyle(fontSize: 13)),
             SizedBox(height: 10),
-            Text('• Wave / Batch Picking:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('â€¢ Wave / Batch Picking:', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('Multiple customer orders are combined into a single wave release to maximize picking density.', style: TextStyle(fontSize: 13)),
           ],
         ),
@@ -314,7 +313,7 @@ class _PickListPageState extends State<PickListPage> with SingleTickerProviderSt
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: chosenZone,
+                          initialValue: chosenZone,
                           decoration: const InputDecoration(labelText: 'Picking Strategy / Zone', border: OutlineInputBorder()),
                           items: const [
                             DropdownMenuItem(value: 'All Zones', child: Text('All Zones (Full Warehouse Wave)')),
@@ -366,7 +365,6 @@ class _PickListPageState extends State<PickListPage> with SingleTickerProviderSt
                                 customerName: customerCtrl.text.trim(),
                                 assignedTo: pickerCtrl.text.trim(),
                                 createdAt: DateTime.now(),
-                                status: PickStatus.pending,
                                 filterZone: chosenZone == 'All Zones' ? '' : chosenZone,
                                 items: pickItems,
                               );
@@ -414,7 +412,7 @@ class _PickExecutionViewState extends State<_PickExecutionView> {
           minChildSize: 0.5,
           maxChildSize: 0.95,
           builder: (ctx, scrollCtrl) {
-            return Container(
+            return DecoratedBox(
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

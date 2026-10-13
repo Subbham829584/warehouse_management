@@ -33,8 +33,8 @@ class ExportService {
         'Min Stock',
         'Unit Cost',
         'Total Value',
-        'Status'
-      ]));
+        'Status',
+      ]),);
     for (final i in items) {
       final p = i.product;
       final status = p.isOutOfStock
@@ -54,8 +54,8 @@ class ExportService {
         p.minStock,
         p.cost.toStringAsFixed(2),
         p.totalValue.toStringAsFixed(2),
-        status
-      ]));
+        status,
+      ]),);
     }
     return b.toString();
   }
@@ -69,8 +69,8 @@ class ExportService {
         'Change',
         'Quantity After',
         'User',
-        'Note'
-      ]));
+        'Note',
+      ]),);
     for (final m in list) {
       b.writeln(_row([
         m.createdAt?.toIso8601String() ?? '',
@@ -79,8 +79,8 @@ class ExportService {
         m.change,
         m.quantityAfter,
         m.userEmail,
-        m.note
-      ]));
+        m.note,
+      ]),);
     }
     return b.toString();
   }

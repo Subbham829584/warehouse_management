@@ -18,14 +18,15 @@ class MovementsPage extends StatelessWidget {
       stream: repo.watchMovements(limit: 200),
       builder: (context, snap) {
         if (snap.hasError) return ErrorState(snap.error);
-        if (!snap.hasData)
+        if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final list = snap.data!;
         if (list.isEmpty) {
           return const EmptyState(
               icon: Icons.history,
               title: 'No activity yet',
-              subtitle: 'Stock in/out and counts will be logged here.');
+              subtitle: 'Stock in/out and counts will be logged here.',);
         }
         return Column(children: [
           Padding(
@@ -37,9 +38,10 @@ class MovementsPage extends StatelessWidget {
                 label: const Text('Copy CSV'),
                 onPressed: () async {
                   await Clipboard.setData(
-                      ClipboardData(text: ExportService.movementsCsv(list)));
-                  if (context.mounted)
+                      ClipboardData(text: ExportService.movementsCsv(list)),);
+                  if (context.mounted) {
                     showMessage(context, 'Activity log copied');
+                  }
                 },
               ),
             ),
@@ -52,7 +54,7 @@ class MovementsPage extends StatelessWidget {
               itemBuilder: (_, i) => MovementTile(list[i]),
             ),
           ),
-        ]);
+        ],);
       },
     );
   }

@@ -246,7 +246,7 @@ class _SignUpState extends State<SignUp> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.08),
+                      color: const Color(0xff000000).withValues(alpha: 0.08),
                     ),
                   ],
                 ),
@@ -268,7 +268,7 @@ class _SignUpState extends State<SignUp> {
                     hintStyle: TextStyle(
                       fontFamily: "Nunito",
                       fontSize: 15,
-                      color: ColorPalette.nileBlue.withOpacity(0.45),
+                      color: ColorPalette.nileBlue.withValues(alpha: 0.45),
                     ),
                   ),
                   cursorColor: ColorPalette.timberGreen,
@@ -285,7 +285,7 @@ class _SignUpState extends State<SignUp> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.08),
+                      color: const Color(0xff000000).withValues(alpha: 0.08),
                     ),
                   ],
                 ),
@@ -307,7 +307,7 @@ class _SignUpState extends State<SignUp> {
                     hintStyle: TextStyle(
                       fontFamily: "Nunito",
                       fontSize: 15,
-                      color: ColorPalette.nileBlue.withOpacity(0.45),
+                      color: ColorPalette.nileBlue.withValues(alpha: 0.45),
                     ),
                   ),
                   cursorColor: ColorPalette.timberGreen,
@@ -324,7 +324,7 @@ class _SignUpState extends State<SignUp> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.08),
+                      color: const Color(0xff000000).withValues(alpha: 0.08),
                     ),
                   ],
                 ),
@@ -350,7 +350,7 @@ class _SignUpState extends State<SignUp> {
                           hintStyle: TextStyle(
                             fontFamily: "Nunito",
                             fontSize: 15,
-                            color: ColorPalette.nileBlue.withOpacity(0.45),
+                            color: ColorPalette.nileBlue.withValues(alpha: 0.45),
                           ),
                         ),
                         cursorColor: ColorPalette.timberGreen,
@@ -386,7 +386,7 @@ class _SignUpState extends State<SignUp> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.08),
+                      color: const Color(0xff000000).withValues(alpha: 0.08),
                     ),
                   ],
                 ),
@@ -413,7 +413,7 @@ class _SignUpState extends State<SignUp> {
                           hintStyle: TextStyle(
                             fontFamily: "Nunito",
                             fontSize: 15,
-                            color: ColorPalette.nileBlue.withOpacity(0.45),
+                            color: ColorPalette.nileBlue.withValues(alpha: 0.45),
                           ),
                         ),
                         cursorColor: ColorPalette.timberGreen,
@@ -470,7 +470,7 @@ class _SignUpState extends State<SignUp> {
                         BoxShadow(
                           offset: const Offset(0, 3),
                           blurRadius: 6,
-                          color: const Color(0xff000000).withOpacity(0.16),
+                          color: const Color(0xff000000).withValues(alpha: 0.16),
                         ),
                       ],
                     ),
@@ -508,7 +508,7 @@ class _SignUpState extends State<SignUp> {
                       text: "Already have an account? ",
                       style: TextStyle(
                         fontFamily: "Nunito",
-                        color: ColorPalette.nileBlue.withOpacity(0.6),
+                        color: ColorPalette.nileBlue.withValues(alpha: 0.6),
                         fontSize: 14,
                       ),
                       children: const [

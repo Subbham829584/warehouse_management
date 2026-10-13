@@ -9,7 +9,6 @@ import 'package:warehouse_management/models/product.dart';
 import 'package:warehouse_management/screens/cycle_count/cycle_count_page.dart';
 import 'package:warehouse_management/screens/grn/grn_page.dart';
 import 'package:warehouse_management/screens/low_stock_page.dart';
-import 'package:warehouse_management/screens/notifications/notifications_page.dart';
 import 'package:warehouse_management/screens/pick_list/pick_list_page.dart';
 import 'package:warehouse_management/screens/roles/roles_page.dart';
 import 'package:warehouse_management/screens/traceability/traceability_page.dart';
@@ -496,10 +495,9 @@ class DashboardPage extends StatelessWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child, this.trailing});
+  const _Section({required this.title, required this.child});
   final String title;
   final Widget child;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -513,12 +511,11 @@ class _Section extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: ColorPalette.timberGreen))),
-              if (trailing != null) trailing!,
-            ]),
+                          color: ColorPalette.timberGreen,),),),
+            ],),
             const SizedBox(height: 8),
             child,
-          ]),
+          ],),
         ),
       );
 }

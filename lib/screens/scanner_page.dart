@@ -34,7 +34,7 @@ class _ScannerPageState extends State<ScannerPage> {
         showMessage(context, 'No product with code "$code"', error: true);
       } else {
         await Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => ProductDetailsPage(item: found)));
+            MaterialPageRoute(builder: (_) => ProductDetailsPage(item: found)),);
         return;
       }
     } catch (e) {
@@ -70,7 +70,7 @@ class _ScannerPageState extends State<ScannerPage> {
                 padding: const EdgeInsets.all(24),
                 child: Text(
                     'Camera unavailable. Type the code below.\n(${error.errorCode.name})',
-                    textAlign: TextAlign.center),
+                    textAlign: TextAlign.center,),
               ),
             ),
           ),
@@ -91,11 +91,11 @@ class _ScannerPageState extends State<ScannerPage> {
               const SizedBox(width: 8),
               FilledButton(
                   onPressed: () => _lookup(_manual.text),
-                  child: const Text('Find')),
-            ]),
+                  child: const Text('Find'),),
+            ],),
           ),
         ),
-      ]),
+      ],),
     );
   }
 }

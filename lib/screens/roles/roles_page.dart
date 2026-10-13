@@ -165,8 +165,7 @@ class _RolesPageState extends State<RolesPage> {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorPalette.timberGreen),
                       ),
                       const SizedBox(height: 12),
-                      for (final u in users)
-                        ListTile(
+                      for (final u in users) Material(color: Colors.transparent, child: ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
                             backgroundColor: _getRoleColor(u.role).withValues(alpha: 0.15),
@@ -188,7 +187,7 @@ class _RolesPageState extends State<RolesPage> {
                               style: TextStyle(color: _getRoleColor(u.role), fontWeight: FontWeight.bold, fontSize: 12),
                             ),
                           ),
-                        ),
+                        ),),
                     ],
                   ),
                 ),

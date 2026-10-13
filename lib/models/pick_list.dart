@@ -74,7 +74,7 @@ class PickLineItem {
       );
 }
 
-/// A zone-sorted pick list — supports wave, batch, and zone methods.
+/// A zone-sorted pick list - supports wave, batch, and zone methods.
 class PickList {
   const PickList({
     required this.id,

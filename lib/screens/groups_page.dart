@@ -24,10 +24,10 @@ class GroupsPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'),),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, ctrl.text),
-              child: const Text('Add')),
+              child: const Text('Add'),),
         ],
       ),
     );
@@ -37,7 +37,7 @@ class GroupsPage extends StatelessWidget {
       final ok = await repo.addGroup(name);
       if (context.mounted) {
         showMessage(context, ok ? 'Group added' : 'That group already exists',
-            error: !ok);
+            error: !ok,);
       }
     } catch (e) {
       if (context.mounted) showMessage(context, 'Failed: $e', error: true);
@@ -49,6 +49,7 @@ class GroupsPage extends StatelessWidget {
     final repo = AppScope.of(context).repo;
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => _addGroup(context),
         icon: const Icon(Icons.add),
         label: const Text('Group'),
@@ -57,14 +58,15 @@ class GroupsPage extends StatelessWidget {
         stream: repo.watchGroups(),
         builder: (context, gSnap) {
           if (gSnap.hasError) return ErrorState(gSnap.error);
-          if (!gSnap.hasData)
+          if (!gSnap.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
           final groups = gSnap.data!;
           if (groups.isEmpty) {
             return const EmptyState(
                 icon: Icons.folder_open,
                 title: 'No product groups',
-                subtitle: 'Tap "+ Group" to create one.');
+                subtitle: 'Tap "+ Group" to create one.',);
           }
           return StreamBuilder<List<ProductItem>>(
             stream: repo.watchProducts(),
@@ -94,7 +96,7 @@ class GroupsPage extends StatelessWidget {
                     count: pSnap.hasData ? inGroup.length : null,
                     lowCount: inGroup
                         .where((p) =>
-                            p.product.isLowStock || p.product.isOutOfStock)
+                            p.product.isLowStock || p.product.isOutOfStock,)
                         .length,
                   );
                 },

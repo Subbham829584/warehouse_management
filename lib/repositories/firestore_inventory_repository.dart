@@ -53,7 +53,7 @@ class FirestoreInventoryRepository implements InventoryRepository {
         await _products.where('group', isEqualTo: name).limit(1).get();
     if (inUse.docs.isNotEmpty) {
       throw StateError(
-          'Group "$name" still has products. Move or delete them first.');
+          'Group "$name" still has products. Move or delete them first.',);
     }
     final q = await _groups.where('name', isEqualTo: name).get();
     final batch = _db.batch();
@@ -77,14 +77,14 @@ class FirestoreInventoryRepository implements InventoryRepository {
           .toList()
         ..sort((a, b) => a.product.name
             .toLowerCase()
-            .compareTo(b.product.name.toLowerCase()));
+            .compareTo(b.product.name.toLowerCase()),);
       return list;
     });
   }
 
   @override
   Future<String> addProduct(Product product,
-      {required String userEmail}) async {
+      {required String userEmail,}) async {
     final ref = _products.doc();
     final batch = _db.batch();
     batch.set(ref, {
@@ -104,7 +104,7 @@ class FirestoreInventoryRepository implements InventoryRepository {
             quantityAfter: product.quantity,
             userEmail: userEmail,
             note: 'Opening stock',
-          ).toMap());
+          ).toMap(),);
     }
     await batch.commit();
     return ref.id;
@@ -125,7 +125,7 @@ class FirestoreInventoryRepository implements InventoryRepository {
   @override
   Stream<List<ProductItem>> searchProducts(String query, {String? group}) =>
       watchProducts(group: group).map((items) =>
-          items.where((i) => productMatches(i.product, query)).toList());
+          items.where((i) => productMatches(i.product, query)).toList(),);
 
   @override
   Future<ProductItem?> findByCode(String code) async {
@@ -202,7 +202,7 @@ class FirestoreInventoryRepository implements InventoryRepository {
 
   @override
   Stream<List<StockMovement>> watchMovements(
-      {String? productId, int limit = 100}) {
+      {String? productId, int limit = 100,}) {
     Query<Map<String, dynamic>> q = _movements;
     if (productId != null) q = q.where('productId', isEqualTo: productId);
     return q
@@ -210,6 +210,6 @@ class FirestoreInventoryRepository implements InventoryRepository {
         .limit(limit)
         .snapshots()
         .map((s) =>
-            s.docs.map((d) => StockMovement.fromMap(d.id, d.data())).toList());
+            s.docs.map((d) => StockMovement.fromMap(d.id, d.data())).toList(),);
   }
 }

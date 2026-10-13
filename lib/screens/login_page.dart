@@ -35,15 +35,16 @@ class _LoginPageState extends State<LoginPage> {
     final auth = AppScope.of(context).auth;
     if (auth == null) {
       showMessage(context, 'Cloud sign-in is unavailable. Try the demo.',
-          error: true);
+          error: true,);
       return;
     }
     setState(() => _loading = true);
     try {
       await auth.signIn(_email.text, _password.text);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         showMessage(context, AuthService.friendlyError(e), error: true);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -64,8 +65,9 @@ class _LoginPageState extends State<LoginPage> {
       await auth.sendPasswordReset(_email.text);
       if (mounted) showMessage(context, 'Password reset email sent.');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         showMessage(context, AuthService.friendlyError(e), error: true);
+      }
     }
   }
 
@@ -82,11 +84,11 @@ class _LoginPageState extends State<LoginPage> {
                 key: _form,
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(Icons.warehouse_rounded,
-                      size: 64, color: ColorPalette.pacificBlue),
+                      size: 64, color: ColorPalette.pacificBlue,),
                   const SizedBox(height: 12),
                   const Text('Warehouse Management',
                       style: TextStyle(
-                          fontSize: 26, color: ColorPalette.timberGreen)),
+                          fontSize: 26, color: ColorPalette.timberGreen,),),
                   const SizedBox(height: 28),
                   TextFormField(
                     controller: _email,
@@ -96,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                     validator: Validators.email,
                     decoration: const InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline)),
+                        prefixIcon: Icon(Icons.mail_outline),),
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
@@ -110,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
-                            _hide ? Icons.visibility_off : Icons.visibility),
+                            _hide ? Icons.visibility_off : Icons.visibility,),
                         onPressed: () => setState(() => _hide = !_hide),
                       ),
                     ),
@@ -119,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                         onPressed: _reset,
-                        child: const Text('Forgot password?')),
+                        child: const Text('Forgot password?'),),
                   ),
                   SizedBox(
                     width: double.infinity,
@@ -131,14 +133,14 @@ class _LoginPageState extends State<LoginPage> {
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
+                                  strokeWidth: 2, color: Colors.white,),)
                           : const Text('Sign in'),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SignupPage())),
+                        MaterialPageRoute(builder: (_) => const SignupPage()),),
                     child: const Text('Create an account'),
                   ),
                   const Divider(height: 28),
@@ -147,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                     icon: const Icon(Icons.play_circle_outline),
                     label: const Text('Try demo (sample data, no account)'),
                   ),
-                ]),
+                ],),
               ),
             ),
           ),

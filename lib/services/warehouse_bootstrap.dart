@@ -8,7 +8,7 @@ class WarehouseBootstrap {
   WarehouseBootstrap._();
 
   static Future<String> resolve(User user,
-      {FirebaseFirestore? firestore}) async {
+      {FirebaseFirestore? firestore,}) async {
     final db = firestore ?? FirebaseFirestore.instance;
     final profileRef = db.collection(AppConstants.usersCol).doc(user.uid);
 
@@ -29,7 +29,7 @@ class WarehouseBootstrap {
       'email': user.email,
       'role': profile.data()?['role'] ?? 'staff',
       'warehouseId': whRef.id,
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true),);
     return whRef.id;
   }
 }

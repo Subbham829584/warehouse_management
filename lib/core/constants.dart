@@ -22,7 +22,7 @@ class AppConstants {
     'kg',
     'litre',
     'pack',
-    'roll'
+    'roll',
   ];
 
   // Firestore collection names

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:warehouse_management/core/app_scope.dart';
 import 'package:warehouse_management/models/product.dart';
@@ -153,8 +153,8 @@ class _TraceabilityPageState extends State<TraceabilityPage> {
           icon: Icons.local_shipping_outlined,
           color: Colors.blue,
           title: '1. Inbound Receipt (Supplier -> Dock)',
-          subtitle: 'PO-2026-089 from Apex Industrial Supplies',
-          details: [
+          subtitle: 'PO-2026-089: $firstProd ($firstSku)',
+          details: const [
             'Receipt Document: GRN-2026-001',
             'Quantity Received: 50 units',
             'Manufacture Date: 15 Jan 2026',
@@ -175,7 +175,7 @@ class _TraceabilityPageState extends State<TraceabilityPage> {
             'Put-away Completed: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now().subtract(const Duration(days: 4)))}',
           ],
         ),
-        _TimelineStep(
+        const _TimelineStep(
           stepNumber: 3,
           icon: Icons.fact_check_outlined,
           color: Colors.orange,
@@ -188,7 +188,7 @@ class _TraceabilityPageState extends State<TraceabilityPage> {
             'Status: Approved & Reconciled',
           ],
         ),
-        _TimelineStep(
+        const _TimelineStep(
           stepNumber: 4,
           icon: Icons.shopping_cart_checkout,
           color: Colors.purple,

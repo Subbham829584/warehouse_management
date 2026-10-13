@@ -24,7 +24,7 @@ class BarList extends StatelessWidget {
                 child: Text(e.key,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12)),
+                    style: const TextStyle(fontSize: 12),),
               ),
               Expanded(
                 child: ClipRRect(
@@ -43,9 +43,9 @@ class BarList extends StatelessWidget {
                 child: Text(format(e.value),
                     textAlign: TextAlign.right,
                     style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w600)),
+                        fontSize: 12, fontWeight: FontWeight.w600,),),
               ),
-            ]),
+            ],),
           ),
       ],
     );

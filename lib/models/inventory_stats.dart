@@ -3,7 +3,7 @@ import 'package:warehouse_management/models/product.dart';
 /// Pure computation over a product list — easy to unit test.
 class InventoryStats {
   InventoryStats._(this.totalProducts, this.totalUnits, this.totalValue,
-      this.lowStock, this.outOfStock, this.valueByGroup, this.unitsByLocation);
+      this.lowStock, this.outOfStock, this.valueByGroup, this.unitsByLocation,);
 
   final int totalProducts;
   final int totalUnits;
@@ -27,10 +27,10 @@ class InventoryStats {
       value += p.totalValue;
       byGroup.update(
           p.group.isEmpty ? 'Ungrouped' : p.group, (v) => v + p.totalValue,
-          ifAbsent: () => p.totalValue);
+          ifAbsent: () => p.totalValue,);
       byLoc.update(
           p.location.isEmpty ? 'Unassigned' : p.location, (v) => v + p.quantity,
-          ifAbsent: () => p.quantity);
+          ifAbsent: () => p.quantity,);
       if (p.isOutOfStock) {
         out.add(i);
       } else if (p.isLowStock) {
@@ -38,6 +38,6 @@ class InventoryStats {
       }
     }
     return InventoryStats._(
-        items.length, units, value, low, out, byGroup, byLoc);
+        items.length, units, value, low, out, byGroup, byLoc,);
   }
 }

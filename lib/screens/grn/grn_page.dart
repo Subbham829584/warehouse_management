@@ -6,7 +6,7 @@ import 'package:warehouse_management/models/product.dart';
 import 'package:warehouse_management/services/wms_service.dart';
 import 'package:warehouse_management/utils/color_palette.dart';
 
-/// GRN page � Receive goods against a Purchase Order.
+/// GRN page â€” Receive goods against a Purchase Order.
 /// Shows: ordered vs received, lot number entry, discrepancy reason, put-away bin suggestion.
 class GrnPage extends StatefulWidget {
   const GrnPage({super.key});
@@ -53,7 +53,7 @@ class _GrnPageState extends State<GrnPage> {
               itemCount: grns.length,
               itemBuilder: (ctx, i) => _buildGrnCard(ctx, grns[i]),
             ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(heroTag: null,
         onPressed: () => _showCreateGrnDialog(context),
         backgroundColor: ColorPalette.pacificBlue,
         icon: const Icon(Icons.add, color: Colors.white),
@@ -103,9 +103,9 @@ class _GrnPageState extends State<GrnPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(grn.grnNumber,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorPalette.timberGreen)),
-                      Text('${grn.poNumber} � ${grn.supplierName}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorPalette.timberGreen),),
+                      Text('${grn.poNumber} â€¢ ${grn.supplierName}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),),
                     ],
                   ),
                 ),
@@ -135,10 +135,10 @@ class _GrnPageState extends State<GrnPage> {
                               Text('Lot: ${item.lotNumber}', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                             if (item.putAwayBin.isNotEmpty)
                               Text('Put-away: ${item.putAwayBin}',
-                                  style: const TextStyle(fontSize: 11, color: ColorPalette.pacificBlue, fontWeight: FontWeight.w600)),
+                                  style: const TextStyle(fontSize: 11, color: ColorPalette.pacificBlue, fontWeight: FontWeight.w600),),
                             if (item.hasDiscrepancy && item.discrepancyReason.isNotEmpty)
                               Text('? ${item.discrepancyReason}',
-                                  style: const TextStyle(fontSize: 11, color: Colors.orange)),
+                                  style: const TextStyle(fontSize: 11, color: Colors.orange),),
                           ],
                         ),
                       ),
@@ -150,13 +150,13 @@ class _GrnPageState extends State<GrnPage> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                                 color: item.hasDiscrepancy ? Colors.orange : Colors.green,
-                              )),
+                              ),),
                           Text('Received/Ordered', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                         ],
                       ),
                     ],
                   ),
-                )),
+                ),),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -177,7 +177,7 @@ class _GrnPageState extends State<GrnPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Received by: ${grn.receivedBy} � ${DateFormat('MMM d, yyyy').format(grn.receivedAt)}',
+              'Received by: ${grn.receivedBy} â€¢ ${DateFormat('MMM d, yyyy').format(grn.receivedAt)}',
               style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
             ),
             if (grn.status == GrnStatus.inProgress) ...[
@@ -260,7 +260,7 @@ class _CreateGrnDialogState extends State<_CreateGrnDialog> {
     if (_selectedProduct != null) {
       setState(() {
         _suggestedBin = widget.wms.suggestBin(_selectedProduct!.product.group,
-            int.tryParse(_receivedCtrl.text) ?? 0);
+            int.tryParse(_receivedCtrl.text) ?? 0,);
       });
     }
   }
@@ -367,12 +367,12 @@ class _CreateGrnDialogState extends State<_CreateGrnDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('Suggested Put-away Bin',
-                                style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                style: TextStyle(fontSize: 11, color: Colors.grey),),
                             Text(_suggestedBin,
                                 style: const TextStyle(
                                     color: ColorPalette.timberGreen,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14)),
+                                    fontSize: 14,),),
                           ],
                         ),
                       ),
@@ -408,7 +408,6 @@ class _CreateGrnDialogState extends State<_CreateGrnDialog> {
                     supplierName: 'Direct Receipt',
                     receivedBy: widget.userEmail,
                     receivedAt: DateTime.now(),
-                    status: GrnStatus.inProgress,
                     items: [
                       GrnLineItem(
                         productId: _selectedProduct!.id,

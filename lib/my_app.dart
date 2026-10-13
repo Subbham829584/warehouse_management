@@ -38,7 +38,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget _buildHome() {
     if (_isDemo) {
-      _demoRepo ??= MemoryInventoryRepository(seed: true);
+      _demoRepo ??= MemoryInventoryRepository();
       return AppScope(
         repo: _demoRepo!,
         auth: null,

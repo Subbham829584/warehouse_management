@@ -53,7 +53,7 @@ class MemoryInventoryRepository implements InventoryRepository {
   Future<void> deleteGroup(String name) async {
     if (_products.any((p) => p.product.group == name)) {
       throw StateError(
-          'Group "$name" still has products. Move or delete them first.');
+          'Group "$name" still has products. Move or delete them first.',);
     }
     _groups.remove(name);
     _emitGroups();
@@ -63,26 +63,26 @@ class MemoryInventoryRepository implements InventoryRepository {
   List<ProductItem> _filtered(String? group) {
     final list = _products
         .where(
-            (i) => group == null || group.isEmpty || i.product.group == group)
+            (i) => group == null || group.isEmpty || i.product.group == group,)
         .toList()
       ..sort((a, b) =>
-          a.product.name.toLowerCase().compareTo(b.product.name.toLowerCase()));
+          a.product.name.toLowerCase().compareTo(b.product.name.toLowerCase()),);
     return list;
   }
 
   @override
   Stream<List<ProductItem>> watchProducts({String? group}) => _live(
       () => _filtered(group),
-      _productsCtrl.stream.map((_) => _filtered(group)));
+      _productsCtrl.stream.map((_) => _filtered(group)),);
 
   @override
   Future<String> addProduct(Product product,
-      {required String userEmail}) async {
+      {required String userEmail,}) async {
     final id = _nextId('prod');
     _products.add(ProductItem(id: id, product: product));
     if (product.quantity > 0) {
       _log(id, product.name, MovementType.stockIn, product.quantity,
-          product.quantity, userEmail, 'Opening stock');
+          product.quantity, userEmail, 'Opening stock',);
     }
     _emitProducts();
     return id;
@@ -95,7 +95,7 @@ class MemoryInventoryRepository implements InventoryRepository {
     // Preserve quantity: it changes only through adjustStock.
     _products[i] = ProductItem(
         id: id,
-        product: product.copyWith(quantity: _products[i].product.quantity));
+        product: product.copyWith(quantity: _products[i].product.quantity),);
     _emitProducts();
   }
 
@@ -108,7 +108,7 @@ class MemoryInventoryRepository implements InventoryRepository {
   @override
   Stream<List<ProductItem>> searchProducts(String query, {String? group}) =>
       watchProducts(group: group).map((items) =>
-          items.where((i) => productMatches(i.product, query)).toList());
+          items.where((i) => productMatches(i.product, query)).toList(),);
 
   @override
   Future<ProductItem?> findByCode(String code) async {
@@ -122,7 +122,7 @@ class MemoryInventoryRepository implements InventoryRepository {
 
   // ---------------- Movements ----------------
   void _log(String pid, String name, MovementType t, int change, int after,
-      String user, String note) {
+      String user, String note,) {
     _movements.insert(
       0,
       StockMovement(
@@ -161,8 +161,9 @@ class MemoryInventoryRepository implements InventoryRepository {
         delta = amount;
         newQty = p.quantity + amount;
       case MovementType.stockOut:
-        if (amount > p.quantity)
+        if (amount > p.quantity) {
           throw InsufficientStockException(p.quantity, amount);
+        }
         delta = -amount;
         newQty = p.quantity - amount;
       case MovementType.adjustment:
@@ -179,7 +180,7 @@ class MemoryInventoryRepository implements InventoryRepository {
 
   @override
   Stream<List<StockMovement>> watchMovements(
-      {String? productId, int limit = 100}) {
+      {String? productId, int limit = 100,}) {
     List<StockMovement> current() => _movements
         .where((m) => productId == null || m.productId == productId)
         .take(limit)
@@ -194,10 +195,10 @@ class MemoryInventoryRepository implements InventoryRepository {
       'Industrial Tools',
       'Packaging Materials',
       'Hardware & Fasteners',
-      'Safety & PPE'
+      'Safety & PPE',
     ]);
     Product p(String n, double c, String g, String loc, String co, int q,
-            String sku, {int min = 10, String unit = 'pcs'}) =>
+            String sku, {int min = 10, String unit = 'pcs',}) =>
         Product(
             name: n,
             cost: c,
@@ -208,37 +209,37 @@ class MemoryInventoryRepository implements InventoryRepository {
             sku: sku,
             barcode: '890$sku',
             minStock: min,
-            unit: unit);
+            unit: unit,);
     final demo = [
       p('Wireless Barcode Scanner 2D', 4500, 'Electronics',
-          'Godown 1, 1st Floor', 'Zebra Tech', 38, '1001'),
+          'Godown 1, 1st Floor', 'Zebra Tech', 38, '1001',),
       p('Thermal Shipping Label Printer', 12500, 'Electronics',
           'Godown 1, 2nd Floor', 'TSC Auto ID', 4, '1002',
-          min: 5),
+          min: 5,),
       p('Hydraulic Pallet Truck 2.5T', 18500, 'Industrial Tools',
           'Godown 1, 1st Floor', 'Godrej', 9, '1003',
-          min: 3),
+          min: 3,),
       p('Digital Platform Weighing Scale', 8200, 'Industrial Tools',
           'Godown 2, 2nd Floor', 'Essae Weighing', 0, '1004',
-          min: 5),
+          min: 5,),
       p('Pallet Stretch Film Rolls (500mm)', 650, 'Packaging Materials',
           'Godown 2, 1st Floor', 'PolyPack Ltd', 140, '1005',
-          unit: 'roll', min: 30),
+          unit: 'roll', min: 30,),
       p('5-Ply Carton Box (Pack 25)', 1750, 'Packaging Materials',
           'Godown 1, 2nd Floor', 'BoxCraft', 12, '1006',
-          unit: 'pack', min: 20),
+          unit: 'pack', min: 20,),
       p('Safety Helmet (Yellow)', 420, 'Safety & PPE', 'Godown 1, 1st Floor',
           'Karam Safety', 65, '1007',
-          min: 15),
+          min: 15,),
       p('SS Hex Bolts M10x50', 25, 'Hardware & Fasteners',
           'Godown 2, 2nd Floor', 'Unbrako', 450, '1008',
-          min: 100),
+          min: 100,),
     ];
     for (final d in demo) {
       final id = _nextId('prod');
       _products.add(ProductItem(id: id, product: d));
       _log(id, d.name, MovementType.stockIn, d.quantity, d.quantity, 'system',
-          'Opening stock');
+          'Opening stock',);
     }
   }
 }

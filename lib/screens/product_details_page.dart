@@ -24,8 +24,10 @@ class MovementTile extends StatelessWidget {
             ? const Color(0xffe75757)
             : const Color(0xffe8a317);
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 4),
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.15),
         child: Icon(
@@ -82,6 +84,7 @@ class MovementTile extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -160,6 +163,7 @@ class ProductDetailsPage extends StatelessWidget {
     );
 
     if (confirmed != true) return;
+    if (!context.mounted) return;
     final qty = int.tryParse(qtyCtrl.text.trim());
     if (qty == null || qty < 0 || (qty == 0 && type != MovementType.adjustment)) {
       if (context.mounted) showMessage(context, 'Enter a valid quantity', error: true);
@@ -194,6 +198,7 @@ class ProductDetailsPage extends StatelessWidget {
       destructive: true,
     );
     if (!ok) return;
+    if (!context.mounted) return;
 
     final repo = AppScope.of(context).repo;
     try {

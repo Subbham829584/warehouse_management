@@ -7,9 +7,10 @@ import 'package:warehouse_management/models/cycle_count.dart';
 import 'package:warehouse_management/models/grn.dart';
 import 'package:warehouse_management/models/pick_list.dart';
 import 'package:warehouse_management/models/product.dart';
+import 'package:warehouse_management/models/stock_movement.dart';
 import 'package:warehouse_management/repositories/inventory_repository.dart';
 
-/// WMS Service — singleton that manages GRN, cycle counts, pick lists,
+/// WMS Service - singleton that manages GRN, cycle counts, pick lists,
 /// put-away, reorder suggestions, roles, and notifications.
 /// Keeps state in memory (in-sync with Firestore when online).
 class WmsService extends ChangeNotifier {
@@ -42,20 +43,23 @@ class WmsService extends ChangeNotifier {
     // Seed demo users
     _users.addAll([
       const AppUser(
-          uid: 'u1',
-          email: 'admin@warehouse.io',
-          displayName: 'Ravi Admin',
-          role: UserRole.admin),
+        uid: 'u1',
+        email: 'admin@warehouse.io',
+        displayName: 'Ravi Admin',
+        role: UserRole.admin,
+      ),
       const AppUser(
-          uid: 'u2',
-          email: 'manager@warehouse.io',
-          displayName: 'Priya Manager',
-          role: UserRole.manager),
+        uid: 'u2',
+        email: 'manager@warehouse.io',
+        displayName: 'Priya Manager',
+        role: UserRole.manager,
+      ),
       const AppUser(
-          uid: 'u3',
-          email: 'picker@warehouse.io',
-          displayName: 'Amit Picker',
-          role: UserRole.picker),
+        uid: 'u3',
+        email: 'picker@warehouse.io',
+        displayName: 'Amit Picker',
+        role: UserRole.picker,
+      ),
     ]);
 
     // Seed demo GRN
@@ -83,7 +87,7 @@ class WmsService extends ChangeNotifier {
             putAwayBin: 'A-01-S1',
           ),
         ],
-      ));
+      ),);
     }
 
     // Seed demo cycle count
@@ -94,8 +98,6 @@ class WmsService extends ChangeNotifier {
         createdBy: 'manager@warehouse.io',
         createdAt: DateTime.now().subtract(const Duration(hours: 3)),
         status: CycleCountStatus.inProgress,
-        abcFilter: 'A',
-        varianceTolerance: 2,
         items: products.take(3).map((p) => CycleCountItem(
               productId: p.id,
               productName: p.product.name,
@@ -104,8 +106,8 @@ class WmsService extends ChangeNotifier {
               abcClass: 'A',
               systemQty: p.product.quantity,
               unitCost: p.product.cost,
-            )).toList(),
-      ));
+            ),).toList(),
+      ),);
     }
 
     // Seed demo pick list
@@ -117,7 +119,6 @@ class WmsService extends ChangeNotifier {
         customerName: 'Tech Solutions Pvt Ltd',
         assignedTo: 'picker@warehouse.io',
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        status: PickStatus.pending,
         filterZone: 'Zone A',
         items: [
           PickLineItem(
@@ -138,7 +139,7 @@ class WmsService extends ChangeNotifier {
             qtyRequired: 2,
           ),
         ],
-      ));
+      ),);
     }
 
     // Seed notifications
@@ -159,7 +160,7 @@ class WmsService extends ChangeNotifier {
             'Only ${p.product.quantity} ${p.product.unit} remaining (min: ${p.product.minStock})',
         createdAt: now.subtract(const Duration(minutes: 30)),
         referenceId: p.id,
-      ));
+      ),);
     }
     _notifications.add(AppNotification(
       id: 'notif_cc1',
@@ -167,14 +168,14 @@ class WmsService extends ChangeNotifier {
       title: 'Class A Cycle Count Due',
       body: 'Class A products have not been counted in 7 days',
       createdAt: now.subtract(const Duration(hours: 2)),
-    ));
+    ),);
     _notifications.add(AppNotification(
       id: 'notif_reorder1',
       type: NotifType.reorderSuggestion,
       title: 'Reorder Suggested',
       body: 'Stock levels for 2 items are below reorder point',
       createdAt: now.subtract(const Duration(hours: 5)),
-    ));
+    ),);
   }
 
   // --- PUT-AWAY RULES -------------------------------------------------------
@@ -269,7 +270,7 @@ class WmsService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Approves a cycle count — commits all variances to inventory.
+  /// Approves a cycle count - commits all variances to inventory.
   Future<void> approveCycleCount({
     required String countId,
     required InventoryRepository repo,
@@ -374,7 +375,8 @@ class WmsService extends ChangeNotifier {
   AppUser? getUserByEmail(String email) {
     try {
       return _users.firstWhere(
-          (u) => u.email.toLowerCase() == email.toLowerCase());
+        (u) => u.email.toLowerCase() == email.toLowerCase(),
+      );
     } catch (_) {
       return null;
     }

@@ -1,6 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:warehouse_management/core/constants.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Thin wrapper over FirebaseAuth with friendly error messages.
 /// NEVER store passwords anywhere — Firebase Auth handles credentials.
@@ -18,13 +18,13 @@ class AuthService {
 
   Future<void> signIn(String email, String password) async {
     final cred = await _auth.signInWithEmailAndPassword(
-        email: email.trim(), password: password);
+        email: email.trim(), password: password,);
     await _touchProfile(cred.user);
   }
 
   Future<void> signUp(String name, String email, String password) async {
     final cred = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(), password: password);
+        email: email.trim(), password: password,);
     final user = cred.user;
     if (user == null) return;
     if (name.trim().isNotEmpty) await user.updateDisplayName(name.trim());
@@ -36,7 +36,7 @@ class AuthService {
       'createdAt': FieldValue.serverTimestamp(),
       'lastLogin': FieldValue.serverTimestamp(),
       // merge: WarehouseBootstrap may already have written warehouseId.
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true),);
   }
 
   Future<void> sendPasswordReset(String email) =>
@@ -48,7 +48,7 @@ class AuthService {
     if (u == null) return;
     try {
       await _db.collection(AppConstants.usersCol).doc(u.uid).set(
-          {'lastLogin': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+          {'lastLogin': FieldValue.serverTimestamp()}, SetOptions(merge: true),);
     } catch (_) {/* non-critical */}
   }
 

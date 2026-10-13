@@ -109,7 +109,7 @@ class _AppShellState extends State<AppShell> {
                   PopupMenuItem(
                     enabled: false,
                     child: Text(scope.isDemo ? 'Demo mode' : scope.userEmail,
-                        style: const TextStyle(fontSize: 12)),
+                        style: const TextStyle(fontSize: 12),),
                   ),
                   const PopupMenuItem(
                     value: 'roles',

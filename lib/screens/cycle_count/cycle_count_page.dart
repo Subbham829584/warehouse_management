@@ -71,7 +71,7 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
         ],
       ),
       floatingActionButton: Permissions.canRunCycleCount(widget.userRole)
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton.extended(heroTag: null,
               onPressed: () => _showCreateDialog(context),
               backgroundColor: ColorPalette.pacificBlue,
               icon: const Icon(Icons.add, color: Colors.white),
@@ -100,7 +100,7 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
             Icon(active ? Icons.fact_check_outlined : Icons.history_outlined, size: 64, color: Colors.grey),
             const SizedBox(height: 12),
             Text(active ? 'No active cycle counts' : 'No completed counts',
-                style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                style: const TextStyle(color: Colors.grey, fontSize: 16),),
           ],
         ),
       );
@@ -143,9 +143,9 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(cc.countNumber,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorPalette.timberGreen)),
-                      Text('Class ${cc.abcFilter} items • Tolerance: ±${cc.varianceTolerance} units',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorPalette.timberGreen),),
+                      Text('Class ${cc.abcFilter} items â€¢ Tolerance: Â±${cc.varianceTolerance} units',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),),
                     ],
                   ),
                 ),
@@ -284,12 +284,12 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: abcFilter,
+                      initialValue: abcFilter,
                       decoration: const InputDecoration(labelText: 'ABC Class to Count'),
                       items: const [
-                        DropdownMenuItem(value: 'A', child: Text('Class A – High Value (count every week)')),
-                        DropdownMenuItem(value: 'B', child: Text('Class B – Medium (count monthly)')),
-                        DropdownMenuItem(value: 'C', child: Text('Class C – Low (count quarterly)')),
+                        DropdownMenuItem(value: 'A', child: Text('Class A â€“ High Value (count every week)')),
+                        DropdownMenuItem(value: 'B', child: Text('Class B â€“ Medium (count monthly)')),
+                        DropdownMenuItem(value: 'C', child: Text('Class C â€“ Low (count quarterly)')),
                         DropdownMenuItem(value: 'All', child: Text('All Items')),
                       ],
                       onChanged: (v) => setS(() => abcFilter = v ?? 'A'),
@@ -301,7 +301,7 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
                         const Spacer(),
                         DropdownButton<int>(
                           value: tolerance,
-                          items: [0, 1, 2, 5, 10].map((v) => DropdownMenuItem(value: v, child: Text('±$v'))).toList(),
+                          items: [0, 1, 2, 5, 10].map((v) => DropdownMenuItem(value: v, child: Text('Â±$v'))).toList(),
                           onChanged: (v) => setS(() => tolerance = v ?? 2),
                         ),
                       ],
@@ -314,7 +314,7 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Will create count sheet for ${products.length} product(s). Variances > ±$tolerance units will require a reason code and approval.',
+                        'Will create count sheet for ${products.length} product(s). Variances > Â±$tolerance units will require a reason code and approval.',
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                       ),
                     ),
@@ -342,7 +342,7 @@ class _CycleCountPageState extends State<CycleCountPage> with SingleTickerProvid
                             abcClass: abcFilter == 'All' ? 'A' : abcFilter,
                             systemQty: p.product.quantity,
                             unitCost: p.product.cost,
-                          )).toList(),
+                          ),).toList(),
                     );
                     _wms.createCycleCount(cc);
                     Navigator.pop(ctx);
@@ -424,9 +424,9 @@ class _CountEntrySheetState extends State<_CountEntrySheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.cc.countNumber,
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text('Class ${widget.cc.abcFilter} • Tolerance ±${widget.cc.varianceTolerance}',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),),
+                        Text('Class ${widget.cc.abcFilter} â€¢ Tolerance Â±${widget.cc.varianceTolerance}',
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),),
                       ],
                     ),
                   ),
@@ -464,8 +464,8 @@ class _CountEntrySheetState extends State<_CountEntrySheet> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(item.productName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                      Text('SKU: ${item.sku} • ${item.location}',
-                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                      Text('SKU: ${item.sku} â€¢ ${item.location}',
+                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),),
                                     ],
                                   ),
                                 ),
@@ -476,7 +476,7 @@ class _CountEntrySheetState extends State<_CountEntrySheet> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text('System: ${item.systemQty}',
-                                      style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w600)),
+                                      style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w600),),
                                 ),
                               ],
                             ),
@@ -527,7 +527,7 @@ class _CountEntrySheetState extends State<_CountEntrySheet> {
                                 child: Column(
                                   children: [
                                     DropdownButtonFormField<VarianceReason>(
-                                      value: _reasons[item.productId],
+                                      initialValue: _reasons[item.productId],
                                       decoration: const InputDecoration(
                                         labelText: 'Reason Code (required)',
                                         isDense: true,
@@ -596,7 +596,7 @@ class _CountEntrySheetState extends State<_CountEntrySheet> {
     }
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Counts saved — awaiting manager approval'), backgroundColor: Colors.blue),
+      const SnackBar(content: Text('Counts saved â€” awaiting manager approval'), backgroundColor: Colors.blue),
     );
   }
 }

@@ -7,7 +7,7 @@ ProductItem item(String id,
         double c = 1,
         int min = 5,
         String g = 'A',
-        String loc = 'L1'}) =>
+        String loc = 'L1',}) =>
     ProductItem(
         id: id,
         product: Product(
@@ -16,7 +16,7 @@ ProductItem item(String id,
             cost: c,
             minStock: min,
             group: g,
-            location: loc));
+            location: loc,),);
 
 void main() {
   test('empty list', () {
@@ -28,7 +28,7 @@ void main() {
   test('totals, low and out of stock', () {
     final s = InventoryStats.from([
       item('ok', q: 100, c: 2),
-      item('low', q: 3, c: 10, min: 5),
+      item('low', q: 3, c: 10),
       item('out', q: 0, c: 50),
     ]);
     expect(s.totalProducts, 3);
@@ -40,7 +40,7 @@ void main() {
 
   test('aggregates by group and location', () {
     final s = InventoryStats.from([
-      item('a', q: 2, c: 10, g: 'X', loc: 'L1'),
+      item('a', q: 2, c: 10, g: 'X'),
       item('b', q: 3, c: 10, g: 'X', loc: 'L2'),
       item('c', q: 1, c: 5, g: '', loc: ''),
     ]);

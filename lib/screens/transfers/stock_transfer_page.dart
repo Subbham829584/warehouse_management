@@ -1,8 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:warehouse_management/core/app_scope.dart';
 import 'package:warehouse_management/models/product.dart';
-import 'package:warehouse_management/models/stock_movement.dart';
 import 'package:warehouse_management/utils/color_palette.dart';
 
 class BinTransferRecord {
@@ -164,7 +163,7 @@ class _StockTransferPageState extends State<StockTransferPage> with SingleTicker
                   const Text('Select Item to Relocate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: ColorPalette.timberGreen)),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _selectedProductId,
+                    initialValue: _selectedProductId,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Product', border: OutlineInputBorder()),
                     items: products.map((p) {
@@ -210,7 +209,7 @@ class _StockTransferPageState extends State<StockTransferPage> with SingleTicker
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _sourceBin,
+                          initialValue: _sourceBin,
                           isExpanded: true,
                           decoration: const InputDecoration(labelText: 'From Bin', border: OutlineInputBorder()),
                           items: _bins.map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 12)))).toList(),
@@ -223,7 +222,7 @@ class _StockTransferPageState extends State<StockTransferPage> with SingleTicker
                       ),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _targetBin,
+                          initialValue: _targetBin,
                           isExpanded: true,
                           decoration: const InputDecoration(labelText: 'To Bin', border: OutlineInputBorder()),
                           items: _bins.map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 12)))).toList(),
@@ -244,7 +243,7 @@ class _StockTransferPageState extends State<StockTransferPage> with SingleTicker
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
-                    value: _selectedReasonCode,
+                    initialValue: _selectedReasonCode,
                     decoration: const InputDecoration(labelText: 'Reason Code (Mandatory in WMS)', border: OutlineInputBorder()),
                     items: _reasonCodes.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
                     onChanged: (v) => setState(() => _selectedReasonCode = v ?? _reasonCodes.first),

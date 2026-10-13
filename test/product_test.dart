@@ -4,12 +4,12 @@ import 'package:warehouse_management/models/product.dart';
 void main() {
   group('Product', () {
     test('stock status flags', () {
-      expect(const Product(quantity: 0).isOutOfStock, isTrue);
-      expect(const Product(quantity: 5, minStock: 10).isLowStock, isTrue);
-      expect(const Product(quantity: 10, minStock: 10).isLowStock, isTrue);
-      expect(const Product(quantity: 11, minStock: 10).isLowStock, isFalse);
+      expect(const Product().isOutOfStock, isTrue);
+      expect(const Product(quantity: 5).isLowStock, isTrue);
+      expect(const Product(quantity: 10).isLowStock, isTrue);
+      expect(const Product(quantity: 11).isLowStock, isFalse);
       // Out of stock is NOT also "low stock" (no double counting).
-      expect(const Product(quantity: 0, minStock: 10).isLowStock, isFalse);
+      expect(const Product().isLowStock, isFalse);
     });
 
     test('totalValue = cost * quantity', () {

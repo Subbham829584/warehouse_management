@@ -92,7 +92,7 @@ class WarehouseService {
           'name': 'Warehouse Management Godown',
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        }, SetOptions(merge: true),);
       }
 
       // Automatically seed default product groups into Firestore if collection is empty
@@ -146,7 +146,7 @@ class WarehouseService {
     final sampleProducts = [
       WarehouseProductItem(
         id: 'mock_1',
-        product: Product(
+        product: const Product(
           name: 'Wireless Barcode Scanner 2D',
           cost: 4500.0,
           group: 'Electronics',
@@ -161,7 +161,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_2',
-        product: Product(
+        product: const Product(
           name: 'Thermal Shipping Label Printer',
           cost: 12500.0,
           group: 'Electronics',
@@ -176,7 +176,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_3',
-        product: Product(
+        product: const Product(
           name: 'Hydraulic Pallet Truck 2.5T',
           cost: 18500.0,
           group: 'Industrial Tools',
@@ -191,7 +191,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_4',
-        product: Product(
+        product: const Product(
           name: 'Digital Platform Weighing Scale',
           cost: 8200.0,
           group: 'Industrial Tools',
@@ -206,7 +206,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_5',
-        product: Product(
+        product: const Product(
           name: 'Pallet Stretch Film Rolls (500mm)',
           cost: 650.0,
           group: 'Packaging Materials',
@@ -221,7 +221,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_6',
-        product: Product(
+        product: const Product(
           name: 'Heavy Duty 5-Ply Carton Box (Pack 25)',
           cost: 1750.0,
           group: 'Packaging Materials',
@@ -236,7 +236,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_7',
-        product: Product(
+        product: const Product(
           name: 'High Impact Safety Helmet (Yellow)',
           cost: 420.0,
           group: 'Safety & PPE',
@@ -251,7 +251,7 @@ class WarehouseService {
       ),
       WarehouseProductItem(
         id: 'mock_8',
-        product: Product(
+        product: const Product(
           name: 'Stainless Steel Hex Bolts M10x50',
           cost: 25.0,
           group: 'Hardware & Fasteners',
@@ -455,7 +455,7 @@ class WarehouseService {
         if (group == null || group.isEmpty) return list;
         return list
             .where((item) =>
-                item.product.group?.toLowerCase() == group.toLowerCase())
+                item.product.group.toLowerCase() == group.toLowerCase(),)
             .toList();
       });
     }
@@ -525,11 +525,11 @@ class WarehouseService {
           final p = Product.fromMap(doc.data());
           final matchesGroup = group == null ||
               group.isEmpty ||
-              (p.group?.toLowerCase() == group.toLowerCase());
+              (p.group.toLowerCase() == group.toLowerCase());
           final matchesName =
-              p.name?.toLowerCase().contains(cleanQuery) ?? false;
+              p.name.toLowerCase().contains(cleanQuery);
           final matchesCompany =
-              p.company?.toLowerCase().contains(cleanQuery) ?? false;
+              p.company.toLowerCase().contains(cleanQuery);
           if (matchesGroup && (matchesName || matchesCompany)) {
             results.add(WarehouseProductItem(id: doc.id, product: p));
           }
@@ -540,11 +540,11 @@ class WarehouseService {
       final results = _mockProducts.where((item) {
         final matchesGroup = group == null ||
             group.isEmpty ||
-            (item.product.group?.toLowerCase() == group.toLowerCase());
+            (item.product.group.toLowerCase() == group.toLowerCase());
         final nameMatches =
-            item.product.name?.toLowerCase().contains(cleanQuery) ?? false;
+            item.product.name.toLowerCase().contains(cleanQuery);
         final companyMatches =
-            item.product.company?.toLowerCase().contains(cleanQuery) ?? false;
+            item.product.company.toLowerCase().contains(cleanQuery);
         return matchesGroup && (nameMatches || companyMatches);
       }).toList();
 

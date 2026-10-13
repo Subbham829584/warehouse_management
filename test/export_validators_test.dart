@@ -26,7 +26,7 @@ void main() {
       expect(
           csv.split('\n')[1].startsWith("\"'=HYPERLINK") ||
               csv.split('\n')[1].startsWith("'="),
-          isTrue);
+          isTrue,);
     });
   });
 
