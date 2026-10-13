@@ -57,73 +57,116 @@ class _MyAppState extends State<MyApp> {
 
     return StreamBuilder<User?>(
       stream: _authService.authChanges,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+      builder: (context, authSnapshot) {
+        final user = authSnapshot.data;
+        final isAuthWaiting =
+            authSnapshot.connectionState == ConnectionState.waiting;
 
-        final user = snapshot.data;
-        if (user == null) {
-          return AppScope(
-            repo: MemoryInventoryRepository(seed: false),
-            auth: _authService,
-            isDemo: false,
-            userEmail: '',
-            child: LoginPage(
-              onDemo: () {
-                setState(() {
-                  _isDemo = true;
-                });
-              },
+        if (isAuthWaiting) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            home: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             ),
           );
         }
 
-        return FutureBuilder<String>(
-          future: WarehouseBootstrap.resolve(user),
-          builder: (context, whSnap) {
-            if (whSnap.hasError) {
-              final fallbackRepo = FirestoreInventoryRepository(
-                warehouseId: 'Aa3SUKLQScIhcYYkBB1K',
-              );
-              return AppScope(
-                repo: fallbackRepo,
+        if (user == null && !_isDemo) {
+          final loginRepo = MemoryInventoryRepository(seed: false);
+          return AppScope(
+            repo: loginRepo,
+            auth: _authService,
+            isDemo: false,
+            userEmail: '',
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Warehouse Management',
+              theme: AppTheme.light(),
+              builder: (context, child) => AppScope(
+                repo: loginRepo,
                 auth: _authService,
                 isDemo: false,
-                userEmail: user.email ?? 'User',
-                child: AppShell(
-                  onSignOut: () => _authService.signOut(),
-                ),
-              );
-            }
+                userEmail: '',
+                child: child!,
+              ),
+              home: LoginPage(
+                onDemo: () => setState(() => _isDemo = true),
+              ),
+            ),
+          );
+        }
 
-            if (!whSnap.hasData) {
-              return const Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Connecting to warehouse...'),
-                    ],
-                  ),
-                ),
-              );
-            }
+        if (_isDemo) {
+          _demoRepo ??= MemoryInventoryRepository(seed: true);
+          return AppScope(
+            repo: _demoRepo!,
+            auth: null,
+            isDemo: true,
+            userEmail: 'demo@warehouse.io',
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Warehouse Management',
+              theme: AppTheme.light(),
+              builder: (context, child) => AppScope(
+                repo: _demoRepo!,
+                auth: null,
+                isDemo: true,
+                userEmail: 'demo@warehouse.io',
+                child: child!,
+              ),
+              home: AppShell(
+                onSignOut: () async {
+                  setState(() {
+                    _isDemo = false;
+                    _demoRepo = null;
+                  });
+                },
+              ),
+            ),
+          );
+        }
 
-            final repo = FirestoreInventoryRepository(
-              warehouseId: whSnap.data!,
-            );
+        // Firebase authenticated user
+        return FutureBuilder<String>(
+          future: WarehouseBootstrap.resolve(user!),
+          builder: (context, whSnap) {
+            final warehouseId = whSnap.data ?? 'Aa3SUKLQScIhcYYkBB1K';
+            final repo = FirestoreInventoryRepository(warehouseId: warehouseId);
+            final email = user.email ?? 'User';
+
             return AppScope(
               repo: repo,
               auth: _authService,
               isDemo: false,
-              userEmail: user.email ?? 'User',
-              child: AppShell(
-                onSignOut: () => _authService.signOut(),
+              userEmail: email,
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Warehouse Management',
+                theme: AppTheme.light(),
+                builder: (context, child) => AppScope(
+                  repo: repo,
+                  auth: _authService,
+                  isDemo: false,
+                  userEmail: email,
+                  child: child!,
+                ),
+                home: whSnap.connectionState == ConnectionState.waiting
+                    ? const Scaffold(
+                        body: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Connecting to warehouse...'),
+                            ],
+                          ),
+                        ),
+                      )
+                    : AppShell(
+                        onSignOut: () => _authService.signOut(),
+                      ),
               ),
             );
           },

@@ -23,6 +23,163 @@ import 'package:warehouse_management/widgets/stat_card.dart';
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  Future<void> _quickStockDialog(
+    BuildContext context, {
+    required MovementType type,
+    required List<ProductItem> items,
+  }) async {
+    if (items.isEmpty) {
+      showMessage(context, 'No products available. Add a product first.', error: true);
+      return;
+    }
+
+    ProductItem selectedItem = items.first;
+    final qtyCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    final title = type == MovementType.stockIn ? 'Quick Stock In (Receive)' : 'Quick Stock Out (Dispatch)';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  type == MovementType.stockIn ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                  color: type == MovementType.stockIn ? const Color(0xff2e9e6b) : const Color(0xffe75757),
+                ),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontSize: 18)),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Select Product', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<ProductItem>(
+                    value: selectedItem,
+                    isExpanded: true,
+                    items: items.map((i) {
+                      return DropdownMenuItem<ProductItem>(
+                        value: i,
+                        child: Text(
+                          '${i.product.name} (Qty: ${i.product.quantity})',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() => selectedItem = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: qtyCtrl,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: type == MovementType.stockIn ? 'Quantity to Add' : 'Quantity to Dispatch',
+                      helperText: 'Available shelf stock: ${selectedItem.product.quantity} ${selectedItem.product.unit}',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: noteCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Reference / Note (Optional)',
+                      hintText: 'e.g. PO-501 or Delivery Note',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: type == MovementType.stockIn ? const Color(0xff2e9e6b) : const Color(0xffe75757),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (confirmed != true) return;
+    final qty = int.tryParse(qtyCtrl.text.trim());
+    if (qty == null || qty <= 0) {
+      if (context.mounted) showMessage(context, 'Enter a valid quantity greater than 0', error: true);
+      return;
+    }
+
+    final scope = AppScope.of(context);
+    try {
+      await scope.repo.adjustStock(
+        productId: selectedItem.id,
+        type: type,
+        amount: qty,
+        userEmail: scope.userEmail,
+        note: noteCtrl.text.trim(),
+      );
+      if (context.mounted) {
+        showMessage(context, 'Successfully logged $type of $qty ${selectedItem.product.unit}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showMessage(context, '$e'.replaceFirst('Bad state: ', ''), error: true);
+      }
+    }
+  }
+
+  Future<void> _quickAddGroup(BuildContext context) async {
+    final repo = AppScope.of(context).repo;
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Product Group'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(hintText: 'e.g. Fasteners & Tools'),
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('Create')),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (name == null || name.trim().isEmpty) return;
+
+    try {
+      final ok = await repo.addGroup(name);
+      if (context.mounted) {
+        showMessage(context, ok ? 'Group "$name" created' : 'Group "$name" already exists', error: !ok);
+      }
+    } catch (e) {
+      if (context.mounted) showMessage(context, 'Failed: $e', error: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final repo = AppScope.of(context).repo;
@@ -50,21 +207,31 @@ class DashboardPage extends StatelessWidget {
 
         final s = InventoryStats.from(items);
         final width = MediaQuery.of(context).size.width;
-        final cols = width > 900 ? 4 : 2;
+        final cols = width > 1100 ? 4 : width > 650 ? 2 : 2;
+
+        final inStockCount = items.length - s.lowStock.length - s.outOfStock.length;
+        final totalCount = items.isEmpty ? 1 : items.length;
+        final inStockPct = (inStockCount / totalCount).clamp(0.0, 1.0);
+        final lowStockPct = (s.lowStock.length / totalCount).clamp(0.0, 1.0);
+        final outStockPct = (s.outOfStock.length / totalCount).clamp(0.0, 1.0);
+
+        final userName = scope.userEmail.isNotEmpty && scope.userEmail.contains('@')
+            ? scope.userEmail.split('@').first
+            : 'Manager';
 
         final reorderCandidates = items
             .where((p) => p.product.quantity <= p.product.minStock)
             .toList();
 
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: [
             // Standard Inventory Cards
             GridView.count(
               crossAxisCount: cols,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: width > 900 ? 2.6 : 2.0,
+              childAspectRatio: width > 900 ? 2.6 : 1.95,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               children: [
@@ -86,10 +253,13 @@ class DashboardPage extends StatelessWidget {
                   color: const Color(0xff2e9e6b),
                 ),
                 StatCard(
-                  label: 'Needs attention',
+                  label: 'Needs Attention',
                   value: '${s.lowStock.length + s.outOfStock.length}',
+                  subtitle: s.outOfStock.isNotEmpty ? '${s.outOfStock.length} Out of stock' : 'Stock levels healthy',
                   icon: Icons.warning_amber_rounded,
-                  color: const Color(0xffe8a317),
+                  color: (s.lowStock.isEmpty && s.outOfStock.isEmpty)
+                      ? const Color(0xff2e9e6b)
+                      : const Color(0xffe8a317),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const LowStockPage()),
                   ),
@@ -136,6 +306,48 @@ class DashboardPage extends StatelessWidget {
                   showMessage(context, 'CSV copied. Paste into Excel / Google Sheets.');
                 }
               },
+            ),
+            const SizedBox(height: 16),
+
+            // 7. Export & Quick Sharing Card
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.copy_all, size: 18),
+                        label: const Text('Export CSV to Clipboard'),
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: ExportService.productsCsv(items)),
+                          );
+                          if (context.mounted) {
+                            showMessage(context, 'Full inventory CSV copied to clipboard!');
+                          }
+                        },
+                      ),
+                    ),
+                    if (s.lowStock.isNotEmpty || s.outOfStock.isNotEmpty) ...[
+                      const SizedBox(width: 10),
+                      FilledButton.tonalIcon(
+                        icon: const Icon(Icons.assignment_outlined, size: 18),
+                        label: const Text('Reorder List'),
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: ExportService.productsCsv([...s.outOfStock, ...s.lowStock])),
+                          );
+                          if (context.mounted) {
+                            showMessage(context, 'Reorder alert list copied to clipboard!');
+                          }
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ],
         );
@@ -494,6 +706,93 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+class _QuickButton extends StatelessWidget {
+  const _QuickButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 1,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: ColorPalette.timberGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HealthLegend extends StatelessWidget {
+  const _HealthLegend({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label: $count',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: ColorPalette.timberGreen.withValues(alpha: 0.8),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.child});
   final String title;
@@ -501,13 +800,22 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                  child: Text(title,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 18, color: ColorPalette.pacificBlue),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      title,
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
