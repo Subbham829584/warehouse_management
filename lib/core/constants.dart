@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'Warehouse Management';
-  static const String currency = '₹';
+  static const String currency = '\u20B9';
 
   /// Default stock level at/below which a product is flagged "low stock".
   static const int defaultLowStockThreshold = 10;
