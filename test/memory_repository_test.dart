@@ -15,7 +15,7 @@ void main() {
             group: 'Hardware',
             quantity: qty,
             sku: 'B1',
-            barcode: '123'),
+            barcode: '123',),
         userEmail: 't@t.com',
       );
 
@@ -41,11 +41,11 @@ void main() {
   });
 
   test('stock in / out update quantity and log history', () async {
-    final id = await addBolt(qty: 10);
+    final id = await addBolt();
     await repo.adjustStock(
-        productId: id, type: MovementType.stockIn, amount: 5, userEmail: 'u');
+        productId: id, type: MovementType.stockIn, amount: 5, userEmail: 'u',);
     await repo.adjustStock(
-        productId: id, type: MovementType.stockOut, amount: 8, userEmail: 'u');
+        productId: id, type: MovementType.stockOut, amount: 8, userEmail: 'u',);
     final p = (await repo.watchProducts().first).single.product;
     expect(p.quantity, 7);
     final moves = await repo.watchMovements(productId: id).first;
@@ -60,19 +60,19 @@ void main() {
           productId: id,
           type: MovementType.stockOut,
           amount: 4,
-          userEmail: 'u'),
+          userEmail: 'u',),
       throwsA(isA<InsufficientStockException>()),
     );
     expect((await repo.watchProducts().first).single.product.quantity, 3);
   });
 
   test('stock take sets the counted quantity', () async {
-    final id = await addBolt(qty: 10);
+    final id = await addBolt();
     await repo.adjustStock(
         productId: id,
         type: MovementType.adjustment,
         amount: 4,
-        userEmail: 'u');
+        userEmail: 'u',);
     final item = (await repo.watchProducts().first).single;
     expect(item.product.quantity, 4);
     final last = (await repo.watchMovements(productId: id).first).first;
@@ -86,12 +86,12 @@ void main() {
             productId: id,
             type: MovementType.stockIn,
             amount: 0,
-            userEmail: 'u'),
-        throwsArgumentError);
+            userEmail: 'u',),
+        throwsArgumentError,);
   });
 
   test('editing a product never overwrites its quantity', () async {
-    final id = await addBolt(qty: 10);
+    final id = await addBolt();
     await repo.updateProduct(id, const Product(name: 'Bolt v2', quantity: 999));
     final p = (await repo.watchProducts().first).single.product;
     expect(p.name, 'Bolt v2');

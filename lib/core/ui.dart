@@ -11,7 +11,7 @@ void showMessage(BuildContext context, String msg, {bool error = false}) {
       content: Text(msg),
       backgroundColor: error ? const Color(0xffe75757) : null,
       behavior: SnackBarBehavior.floating,
-    ));
+    ),);
 }
 
 Future<bool> confirm(
@@ -29,7 +29,7 @@ Future<bool> confirm(
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel')),
+            child: const Text('Cancel'),),
         FilledButton(
           style: destructive
               ? FilledButton.styleFrom(backgroundColor: const Color(0xffe75757))

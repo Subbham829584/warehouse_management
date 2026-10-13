@@ -31,7 +31,7 @@ class _SignupPageState extends State<SignupPage> {
     final auth = AppScope.of(context).auth;
     if (auth == null) {
       showMessage(context, 'Cloud sign-up is unavailable. Try the demo.',
-          error: true);
+          error: true,);
       return;
     }
     setState(() => _loading = true);
@@ -39,8 +39,9 @@ class _SignupPageState extends State<SignupPage> {
       await auth.signUp(_name.text, _email.text, _password.text);
       if (mounted) Navigator.of(context).pop(); // auth stream swaps the root
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         showMessage(context, AuthService.friendlyError(e), error: true);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -63,7 +64,7 @@ class _SignupPageState extends State<SignupPage> {
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                       labelText: 'Full name',
-                      prefixIcon: Icon(Icons.person_outline)),
+                      prefixIcon: Icon(Icons.person_outline),),
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -72,7 +73,7 @@ class _SignupPageState extends State<SignupPage> {
                   textInputAction: TextInputAction.next,
                   validator: Validators.email,
                   decoration: const InputDecoration(
-                      labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+                      labelText: 'Email', prefixIcon: Icon(Icons.mail_outline),),
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -82,7 +83,7 @@ class _SignupPageState extends State<SignupPage> {
                   validator: Validators.password,
                   decoration: const InputDecoration(
                       labelText: 'Password (8+ chars)',
-                      prefixIcon: Icon(Icons.lock_outline)),
+                      prefixIcon: Icon(Icons.lock_outline),),
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -93,7 +94,7 @@ class _SignupPageState extends State<SignupPage> {
                       v != _password.text ? 'Passwords do not match' : null,
                   decoration: const InputDecoration(
                       labelText: 'Confirm password',
-                      prefixIcon: Icon(Icons.lock_outline)),
+                      prefixIcon: Icon(Icons.lock_outline),),
                 ),
                 const SizedBox(height: 22),
                 SizedBox(
@@ -106,11 +107,11 @@ class _SignupPageState extends State<SignupPage> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2, color: Colors.white,),)
                         : const Text('Sign up'),
                   ),
                 ),
-              ]),
+              ],),
             ),
           ),
         ),

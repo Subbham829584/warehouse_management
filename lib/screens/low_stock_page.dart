@@ -20,8 +20,9 @@ class LowStockPage extends StatelessWidget {
         stream: repo.watchProducts(),
         builder: (context, snap) {
           if (snap.hasError) return ErrorState(snap.error);
-          if (!snap.hasData)
+          if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
           final s = InventoryStats.from(snap.data!);
           final list = [...s.outOfStock, ...s.lowStock];
           if (list.isEmpty) {
@@ -49,8 +50,9 @@ class LowStockPage extends StatelessWidget {
                       await Clipboard.setData(
                         ClipboardData(text: ExportService.productsCsv(list)),
                       );
-                      if (context.mounted)
+                      if (context.mounted) {
                         showMessage(context, 'Reorder list copied');
+                      }
                     },
                   ),
                 ),

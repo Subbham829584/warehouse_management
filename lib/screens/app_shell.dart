@@ -11,12 +11,11 @@ import 'package:warehouse_management/screens/groups_page.dart';
 import 'package:warehouse_management/screens/labels/label_studio_page.dart';
 import 'package:warehouse_management/screens/layout/warehouse_layout_page.dart';
 import 'package:warehouse_management/screens/movements_page.dart';
-import 'package:warehouse_management/screens/procurement/procurement_page.dart';
-import 'package:warehouse_management/screens/returns/returns_page.dart';
+import 'package:warehouse_management/screens/notifications/notifications_page.dart';
+import 'package:warehouse_management/screens/roles/roles_page.dart';
 import 'package:warehouse_management/screens/scanner_page.dart';
 import 'package:warehouse_management/screens/search_page.dart';
-import 'package:warehouse_management/services/enterprise_store.dart';
-import 'package:warehouse_management/utils/color_palette.dart';
+import 'package:warehouse_management/services/wms_service.dart';
 
 /// Master Enterprise Shell providing navigation across 12 core warehouse modules.
 class AppShell extends StatefulWidget {
@@ -31,36 +30,7 @@ class _AppShellState extends State<AppShell> {
   int _index = 0;
   final _store = EnterpriseStore.instance;
 
-  static const _titles = [
-    'Dashboard',
-    'Inventory Catalog',
-    'Procurement & POs',
-    'Outbound Dispatch',
-    'Warehouse Zones & Bins',
-    'Cycle Count Audit',
-    'ABC Analytics & Forecast',
-    'Returns & RMA',
-    'Equipment & Machinery',
-    'Batch & Expiry (FEFO)',
-    'Barcode & Label Studio',
-    'Movement Activity Log',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _store.addListener(_onStoreUpdate);
-  }
-
-  void _onStoreUpdate() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _store.removeListener(_onStoreUpdate);
-    super.dispose();
-  }
+  static const _titles = ['Warehouse Hub', 'Inventory', 'Stock Activity'];
 
   Future<void> _logout() async {
     final ok =
@@ -71,6 +41,8 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final scope = AppScope.of(context);
+    final wms = WmsService.instance;
+
     final pages = [
       const DashboardPage(),
       const GroupsPage(),
@@ -86,97 +58,123 @@ class _AppShellState extends State<AppShell> {
       const MovementsPage(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_index],
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Search products',
-            icon: const Icon(Icons.search),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const SearchPage())),
-          ),
-          IconButton(
-            tooltip: 'Scan barcode',
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const ScannerPage())),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Account',
-            onSelected: (v) {
-              if (v == 'logout') _logout();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                enabled: false,
-                child: Row(
-                  children: [
-                    const Icon(Icons.account_circle_outlined, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        scope.isDemo ? 'Demo Mode' : scope.userEmail,
-                        style: const TextStyle(fontSize: 12),
-                        overflow: TextOverflow.ellipsis,
+    return ListenableBuilder(
+      listenable: wms,
+      builder: (context, _) {
+        final unreadCount = wms.unreadNotifications.length;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(_titles[_index]),
+            actions: [
+              IconButton(
+                tooltip: 'Search',
+                icon: const Icon(Icons.search),
+                onPressed: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const SearchPage())),
+              ),
+              IconButton(
+                tooltip: 'Scan barcode',
+                icon: const Icon(Icons.qr_code_scanner),
+                onPressed: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const ScannerPage())),
+              ),
+              // Notifications bell with badge
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    tooltip: 'Alerts',
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                    ),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, size: 16, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Sign out', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
+              PopupMenuButton<String>(
+                onSelected: (v) {
+                  if (v == 'roles') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RolesPage()),
+                    );
+                  } else if (v == 'logout') {
+                    _logout();
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    enabled: false,
+                    child: Text(scope.isDemo ? 'Demo mode' : scope.userEmail,
+                        style: const TextStyle(fontSize: 12),),
+                  ),
+                  const PopupMenuItem(
+                    value: 'roles',
+                    child: Row(
+                      children: [
+                        Icon(Icons.security, size: 18),
+                        SizedBox(width: 8),
+                        Text('Roles & RBAC'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, size: 18),
+                        SizedBox(width: 8),
+                        Text('Sign out'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-      drawer: _buildEnterpriseDrawer(context, scope),
-      body: IndexedStack(index: _index, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index > 3 ? 0 : _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          body: IndexedStack(index: _index, children: pages),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _index,
+            onDestinationSelected: (i) => setState(() => _index = i),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2),
+                label: 'Inventory',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.history),
+                label: 'Activity',
+              ),
+            ],
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Inventory',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: _store.pendingPOCount > 0,
-              label: Text('${_store.pendingPOCount}'),
-              child: const Icon(Icons.receipt_long_outlined),
-            ),
-            selectedIcon: const Icon(Icons.receipt_long),
-            label: 'Procurement',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: _store.pendingDispatchCount > 0,
-              label: Text('${_store.pendingDispatchCount}'),
-              child: const Icon(Icons.local_shipping_outlined),
-            ),
-            selectedIcon: const Icon(Icons.local_shipping),
-            label: 'Dispatch',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

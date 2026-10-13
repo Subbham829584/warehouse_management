@@ -42,11 +42,16 @@ class BarList extends StatelessWidget {
                     e.key,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ColorPalette.timberGreen,
-                    ),
+                    style: const TextStyle(fontSize: 12),),
+              ),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: (e.value / max).clamp(0.0, 1.0),
+                    minHeight: 10,
+                    backgroundColor: ColorPalette.geyser,
+                    color: ColorPalette.pacificBlue,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -68,14 +73,9 @@ class BarList extends StatelessWidget {
                     format(e.value),
                     textAlign: TextAlign.right,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: ColorPalette.timberGreen,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                        fontSize: 12, fontWeight: FontWeight.w600,),),
+              ),
+            ],),
           ),
       ],
     );

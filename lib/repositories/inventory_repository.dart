@@ -30,7 +30,7 @@ abstract class InventoryRepository {
     String note = '',
   });
   Stream<List<StockMovement>> watchMovements(
-      {String? productId, int limit = 100});
+      {String? productId, int limit = 100,});
 }
 
 class InsufficientStockException implements Exception {

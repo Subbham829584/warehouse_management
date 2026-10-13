@@ -8,7 +8,6 @@ class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: ColorPalette.pacificBlue,
       primary: ColorPalette.pacificBlue,
-      brightness: Brightness.light,
     );
     return ThemeData(
       useMaterial3: true,
@@ -23,14 +22,14 @@ class AppTheme {
         titleTextStyle: TextStyle(
             fontFamily: 'Nunito',
             fontSize: 22,
-            color: ColorPalette.timberGreen),
+            color: ColorPalette.timberGreen,),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+            borderSide: BorderSide.none,),
       ),
       cardTheme: CardThemeData(
         color: Colors.white,

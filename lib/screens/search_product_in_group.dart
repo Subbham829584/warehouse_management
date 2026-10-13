@@ -5,7 +5,7 @@ import 'package:warehouse_management/widgets/product_card.dart';
 
 class SearchProductInGroupPage extends StatefulWidget {
   final String? name;
-  const SearchProductInGroupPage({Key? key, this.name}) : super(key: key);
+  const SearchProductInGroupPage({super.key, this.name});
 
   @override
   State<SearchProductInGroupPage> createState() =>
@@ -34,7 +34,7 @@ class _SearchProductInGroupPageState extends State<SearchProductInGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: ColoredBox(
         color: ColorPalette.pacificBlue,
         child: SafeArea(
           child: Container(
@@ -99,7 +99,7 @@ class _SearchProductInGroupPageState extends State<SearchProductInGroupPage> {
                             hintStyle: TextStyle(
                               fontFamily: "Nunito",
                               fontSize: 18,
-                              color: ColorPalette.timberGreen.withOpacity(0.58),
+                              color: ColorPalette.timberGreen.withValues(alpha: 0.58),
                             ),
                           ),
                           cursorColor: ColorPalette.timberGreen,

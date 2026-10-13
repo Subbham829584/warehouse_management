@@ -67,18 +67,19 @@ class _SearchPageState extends State<SearchPage> {
       body: _query.isEmpty
           ? const EmptyState(
               icon: Icons.search,
-              title: 'Search by name, company, SKU or barcode')
+              title: 'Search by name, company, SKU or barcode',)
           : StreamBuilder<List<ProductItem>>(
               stream: repo.searchProducts(_query, group: widget.group),
               builder: (context, snap) {
                 if (snap.hasError) return ErrorState(snap.error);
-                if (!snap.hasData)
+                if (!snap.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 final items = snap.data!;
                 if (items.isEmpty) {
                   return EmptyState(
                       icon: Icons.search_off,
-                      title: "No results for '$_query'");
+                      title: "No results for '$_query'",);
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.all(16),

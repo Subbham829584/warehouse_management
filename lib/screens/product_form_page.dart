@@ -97,8 +97,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
       showMessage(context, _editing ? 'Product updated' : 'Product added');
       Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         showMessage(context, '$e'.replaceFirst('Bad state: ', ''), error: true);
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -109,7 +110,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
       TextInputType? type,
       int lines = 1,
       bool enabled = true,
-      Widget? suffix}) {
+      Widget? suffix,}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
@@ -133,18 +134,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
           padding: const EdgeInsets.all(20),
           children: [
             _field('name', 'Product name *',
-                validator: (v) => Validators.required(v, 'Name')),
+                validator: (v) => Validators.required(v, 'Name'),),
             _field('company', 'Manufacturer / company'),
             Row(children: [
               Expanded(child: _field('sku', 'SKU')),
               const SizedBox(width: 12),
               Expanded(child: _field('barcode', 'Barcode')),
-            ]),
+            ],),
             Row(children: [
               Expanded(
                 child: _field('cost', 'Unit cost (₹) *',
                     type: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (v) => Validators.nonNegativeNumber(v, 'Cost')),
+                    validator: (v) => Validators.nonNegativeNumber(v, 'Cost'),),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -155,15 +156,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         : 'Opening quantity *',
                     type: TextInputType.number,
                     enabled: !_editing,
-                    validator: (v) => Validators.nonNegativeInt(v, 'Quantity')),
+                    validator: (v) => Validators.nonNegativeInt(v, 'Quantity'),),
               ),
-            ]),
+            ],),
             Row(children: [
               Expanded(
                 child: _field('minStock', 'Low-stock alert at *',
                     type: TextInputType.number,
                     validator: (v) =>
-                        Validators.nonNegativeInt(v, 'Min stock')),
+                        Validators.nonNegativeInt(v, 'Min stock'),),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -174,13 +175,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     decoration: const InputDecoration(labelText: 'Unit'),
                     items: [
                       for (final u in AppConstants.units)
-                        DropdownMenuItem(value: u, child: Text(u))
+                        DropdownMenuItem(value: u, child: Text(u)),
                     ],
                     onChanged: (v) => setState(() => _unit = v ?? _unit),
                   ),
                 ),
               ),
-            ]),
+            ],),
             Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: DropdownButtonFormField<String>(
@@ -188,7 +189,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: const InputDecoration(labelText: 'Location'),
                 items: [
                   for (final l in AppConstants.locations)
-                    DropdownMenuItem(value: l, child: Text(l))
+                    DropdownMenuItem(value: l, child: Text(l)),
                 ],
                 onChanged: (v) => setState(() => _location = v ?? _location),
               ),
@@ -200,7 +201,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
               return (u != null && u.hasScheme && u.host.isNotEmpty)
                   ? null
                   : 'Enter a valid URL';
-            }),
+            },),
             _field('description', 'Description', lines: 3),
             const SizedBox(height: 8),
             SizedBox(
@@ -212,7 +213,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2, color: Colors.white,),)
                     : const Icon(Icons.check),
                 label: Text(_editing ? 'Save changes' : 'Add product'),
               ),

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
+  DefaultFirebaseOptions._();
+
   /// Live Firebase is active
   static const bool isConfigured = true;
 

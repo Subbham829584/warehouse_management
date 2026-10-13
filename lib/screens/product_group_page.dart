@@ -20,6 +20,7 @@ class ProductGroupPage extends StatelessWidget {
       destructive: true,
     );
     if (!ok) return;
+    if (!context.mounted) return;
 
     final repo = AppScope.of(context).repo;
     try {
@@ -61,6 +62,7 @@ class ProductGroupPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ProductFormPage(group: groupName),

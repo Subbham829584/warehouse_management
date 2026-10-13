@@ -5,7 +5,7 @@ import 'package:warehouse_management/utils/color_palette.dart';
 import 'package:warehouse_management/widgets/product_card.dart';
 
 class GlobalSearchPage extends StatefulWidget {
-  const GlobalSearchPage({Key? key}) : super(key: key);
+  const GlobalSearchPage({super.key});
 
   @override
   State<GlobalSearchPage> createState() => _GlobalSearchPageState();
@@ -31,7 +31,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: ColoredBox(
         color: ColorPalette.pacificBlue,
         child: SafeArea(
           child: Container(
@@ -94,7 +94,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                             hintStyle: TextStyle(
                               fontFamily: "Nunito",
                               fontSize: 24,
-                              color: ColorPalette.timberGreen.withOpacity(0.58),
+                              color: ColorPalette.timberGreen.withValues(alpha: 0.58),
                             ),
                           ),
                           cursorColor: ColorPalette.timberGreen,

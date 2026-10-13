@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:double_back_to_close_app/double_back_to_close_app.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ class Home extends StatelessWidget {
           bottom: 10,
           right: 10,
         ),
-        child: FloatingActionButton(
+        child: FloatingActionButton(heroTag: null,
           onPressed: () {
             showDialog(
               context: context,
@@ -42,7 +42,7 @@ class Home extends StatelessWidget {
                             BoxShadow(
                               offset: const Offset(0, 3),
                               blurRadius: 6,
-                              color: const Color(0xff000000).withOpacity(0.16),
+                              color: const Color(0xff000000).withValues(alpha: 0.16),
                             ),
                           ],
                         ),
@@ -65,7 +65,7 @@ class Home extends StatelessWidget {
                             hintStyle: TextStyle(
                               fontFamily: "Nunito",
                               fontSize: 16,
-                              color: ColorPalette.nileBlue.withOpacity(0.58),
+                              color: ColorPalette.nileBlue.withValues(alpha: 0.58),
                             ),
                           ),
                           cursorColor: ColorPalette.timberGreen,
@@ -135,7 +135,7 @@ class Home extends StatelessWidget {
                                 offset: const Offset(0, 3),
                                 blurRadius: 6,
                                 color:
-                                    const Color(0xff000000).withOpacity(0.16),
+                                    const Color(0xff000000).withValues(alpha: 0.16),
                               ),
                             ],
                           ),
@@ -169,7 +169,7 @@ class Home extends StatelessWidget {
         snackBar: const SnackBar(
           content: Text('Tap back again to leave'),
         ),
-        child: Container(
+        child: ColoredBox(
           color: ColorPalette.pacificBlue,
           child: SafeArea(
             child: Container(
@@ -240,7 +240,7 @@ class Home extends StatelessWidget {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -251,8 +251,8 @@ class Home extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: const [
+                            const Row(
+                              children: [
                                 SizedBox(
                                   height: 20,
                                 ),
@@ -307,7 +307,7 @@ class Home extends StatelessWidget {
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: ColorPalette.timberGreen
-                                                    .withOpacity(0.7),
+                                                    .withValues(alpha: 0.7),
                                                 fontFamily: "Nunito",
                                               ),
                                             ),
@@ -340,7 +340,7 @@ class Home extends StatelessWidget {
                                               Icons.inventory_2_outlined,
                                               size: 48,
                                               color: ColorPalette.timberGreen
-                                                  .withOpacity(0.4),
+                                                  .withValues(alpha: 0.4),
                                             ),
                                             const SizedBox(height: 12),
                                             const Text(
@@ -405,7 +405,7 @@ class Home extends StatelessWidget {
                                   }
                                 },
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),

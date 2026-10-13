@@ -28,6 +28,33 @@ class _MyAppState extends State<MyApp> {
       DeviceOrientation.portraitUp,
     ]);
 
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Warehouse Management',
+      theme: AppTheme.light(),
+      home: _buildHome(),
+    );
+  }
+
+  Widget _buildHome() {
+    if (_isDemo) {
+      _demoRepo ??= MemoryInventoryRepository();
+      return AppScope(
+        repo: _demoRepo!,
+        auth: null,
+        isDemo: true,
+        userEmail: 'demo@warehouse.io',
+        child: AppShell(
+          onSignOut: () async {
+            setState(() {
+              _isDemo = false;
+              _demoRepo = null;
+            });
+          },
+        ),
+      );
+    }
+
     return StreamBuilder<User?>(
       stream: _authService.authChanges,
       builder: (context, authSnapshot) {

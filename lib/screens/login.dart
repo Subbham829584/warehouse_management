@@ -50,7 +50,7 @@ class _LoginState extends State<Login> {
             'uid': value.user!.uid,
             'email': email,
             'lastLogin': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+          }, SetOptions(merge: true),);
         } catch (_) {}
       }
     } on FirebaseAuthException catch (e) {
@@ -158,7 +158,7 @@ class _LoginState extends State<Login> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.16),
+                      color: const Color(0xff000000).withValues(alpha: 0.16),
                     ),
                   ],
                 ),
@@ -181,7 +181,7 @@ class _LoginState extends State<Login> {
                     hintStyle: TextStyle(
                       fontFamily: "Nunito",
                       fontSize: 16,
-                      color: ColorPalette.nileBlue.withOpacity(0.58),
+                      color: ColorPalette.nileBlue.withValues(alpha: 0.58),
                     ),
                   ),
                   cursorColor: ColorPalette.timberGreen,
@@ -198,7 +198,7 @@ class _LoginState extends State<Login> {
                     BoxShadow(
                       offset: const Offset(0, 3),
                       blurRadius: 6,
-                      color: const Color(0xff000000).withOpacity(0.16),
+                      color: const Color(0xff000000).withValues(alpha: 0.16),
                     ),
                   ],
                 ),
@@ -225,7 +225,7 @@ class _LoginState extends State<Login> {
                           hintStyle: TextStyle(
                             fontFamily: "Nunito",
                             fontSize: 16,
-                            color: ColorPalette.nileBlue.withOpacity(0.58),
+                            color: ColorPalette.nileBlue.withValues(alpha: 0.58),
                           ),
                         ),
                         cursorColor: ColorPalette.timberGreen,
@@ -287,7 +287,7 @@ class _LoginState extends State<Login> {
                           BoxShadow(
                             offset: const Offset(0, 3),
                             blurRadius: 6,
-                            color: const Color(0xff000000).withOpacity(0.16),
+                            color: const Color(0xff000000).withValues(alpha: 0.16),
                           ),
                         ],
                       ),
@@ -336,7 +336,7 @@ class _LoginState extends State<Login> {
                           BoxShadow(
                             offset: const Offset(0, 3),
                             blurRadius: 6,
-                            color: const Color(0xff000000).withOpacity(0.08),
+                            color: const Color(0xff000000).withValues(alpha: 0.08),
                           ),
                         ],
                       ),
